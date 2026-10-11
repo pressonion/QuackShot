@@ -460,6 +460,28 @@ socket.on("joinedRoom",data=>{
 socket.on("matchState",state=>applyMatchState(state));
 
 function applyMatchState(state){
+  const newRoundStarted =
+  state.phase === "playing" &&
+  (previousPhase !== "playing" || previousRound !== state.roundNumber);
+
+if (newRoundStarted) {
+  const spawn = (state.players || []).find(p => p.id === myId);
+  if (spawn) {
+    camera.position.set(spawn.x, 1.7, spawn.z);
+    yaw = spawn.yaw;
+    pitch = spawn.pitch;
+    camera.rotation.set(pitch, yaw, 0, "YXZ");
+    ammo = spawn.ammo;
+    health = spawn.health;
+    alive = spawn.alive;
+    reloading = false;
+    updateHealthUI();
+    setAmmoUI();
+  }
+}
+
+previousPhase = state.phase;
+previousRound = state.roundNumber;
   matchState=state;
   hostId=state.hostId||hostId;
   $("roundNumber").textContent=state.roundNumber||1;
