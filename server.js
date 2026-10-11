@@ -1,4 +1,4 @@
-
+```javascript
 const express = require("express");
 const http = require("http");
 const path = require("path");
@@ -23,31 +23,46 @@ const SHOT_COOLDOWN_MS = 105;
 const ROUND_DELAY_MS = 3500;
 const WINNING_SCORE = 12;
 
+// Keep these coordinates in sync with mapBlocks in public/index.html.
 const COVER = [
-  { x: -5, z: -7, w: 5, d: 1.4, h: 2.1 },
-  { x: 5, z: 7, w: 5, d: 1.4, h: 2.1 },
-  { x: 0, z: 0, w: 1.4, d: 7, h: 2.5 },
-  { x: -9, z: 4, w: 2.3, d: 3.2, h: 1.5 },
-  { x: 9, z: -4, w: 2.3, d: 3.2, h: 1.5 },
-  { x: -5, z: 12, w: 4, d: 1.5, h: 1.7 },
-  { x: 5, z: -12, w: 4, d: 1.5, h: 1.7 },
-  { x: -12, z: -2, w: 1.5, d: 4, h: 1.8 },
-  { x: 12, z: 2, w: 1.5, d: 4, h: 1.8 },
-  { x: -3, z: -15, w: 3, d: 1.5, h: 1.4 },
-  { x: 3, z: 15, w: 3, d: 1.5, h: 1.4 }
+  { x: 0, z: -24, w: 50, d: 1, h: 7 },
+  { x: 0, z: 24, w: 50, d: 1, h: 7 },
+  { x: -24, z: 0, w: 1, d: 50, h: 7 },
+  { x: 24, z: 0, w: 1, d: 50, h: 7 },
+
+  { x: -9, z: -13, w: 8, d: 10, h: 7 },
+  { x: -9, z: 13, w: 8, d: 10, h: 7 },
+  { x: 9, z: -13, w: 8, d: 10, h: 7 },
+  { x: 9, z: 13, w: 8, d: 10, h: 7 },
+
+  { x: -19, z: -19, w: 5, d: 5, h: 11 },
+  { x: 19, z: -19, w: 5, d: 5, h: 11 },
+  { x: -19, z: 19, w: 5, d: 5, h: 11 },
+  { x: 19, z: 19, w: 5, d: 5, h: 11 },
+
+  { x: -3.8, z: -5.5, w: 1.2, d: 5, h: 2.3 },
+  { x: 3.8, z: 5.5, w: 1.2, d: 5, h: 2.3 },
+  { x: -3.8, z: 5.5, w: 1.2, d: 5, h: 2.3 },
+  { x: 3.8, z: -5.5, w: 1.2, d: 5, h: 2.3 },
+
+  { x: -15, z: -6, w: 4.5, d: 1.1, h: 2.5 },
+  { x: 15, z: 6, w: 4.5, d: 1.1, h: 2.5 },
+  { x: -15, z: 6, w: 4.5, d: 1.1, h: 2.5 },
+  { x: 15, z: -6, w: 4.5, d: 1.1, h: 2.5 },
+
+  { x: 0, z: -2.7, w: 5.8, d: 1, h: 1.35 },
+  { x: 0, z: 2.7, w: 5.8, d: 1, h: 1.35 }
 ];
 
 function makeRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let code;
-
   do {
     code = "";
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       code += chars[Math.floor(Math.random() * chars.length)];
     }
   } while (rooms.has(code));
-
   return code;
 }
 
@@ -81,14 +96,15 @@ function publicPlayers(room) {
     color: p.team === "red" ? "#bd625b" : "#6598cf",
     team: p.team,
     x: p.x,
-    y: 1.7,
+    y: p.crouched ? 1.05 : 1.7,
     z: p.z,
     yaw: p.yaw,
     pitch: p.pitch,
     health: p.health,
     ammo: p.ammo,
     alive: p.alive,
-    reloading: p.reloading
+    reloading: p.reloading,
+    crouched: p.crouched
   }));
 }
 
@@ -107,36 +123,26 @@ function publicState(room) {
 
 function broadcastState(code) {
   const room = rooms.get(code);
-  if (!room) return;
-  io.to(code).emit("matchState", publicState(room));
-}
-
-function getPlayerTeamCounts(room) {
-  return {
-    red: teamCount(room, "red"),
-    blue: teamCount(room, "blue")
-  };
+  if (room) io.to(code).emit("matchState", publicState(room));
 }
 
 function chooseTeam(room) {
-  const counts = getPlayerTeamCounts(room);
-
-  if (counts.red >= MAX_TEAM_SIZE && counts.blue >= MAX_TEAM_SIZE) return null;
-  if (counts.red >= MAX_TEAM_SIZE) return "blue";
-  if (counts.blue >= MAX_TEAM_SIZE) return "red";
-
-  return counts.red <= counts.blue ? "red" : "blue";
+  const red = teamCount(room, "red");
+  const blue = teamCount(room, "blue");
+  if (red >= MAX_TEAM_SIZE && blue >= MAX_TEAM_SIZE) return null;
+  if (red >= MAX_TEAM_SIZE) return "blue";
+  if (blue >= MAX_TEAM_SIZE) return "red";
+  return red <= blue ? "red" : "blue";
 }
 
 function resetPlayerForRound(player, room) {
   const teamPlayers = [...room.players.values()]
     .filter(p => p.team === player.team)
     .sort((a, b) => a.id.localeCompare(b.id));
-
   const index = Math.max(0, teamPlayers.findIndex(p => p.id === player.id));
   const z = (index - (teamPlayers.length - 1) / 2) * 2.1;
 
-  player.x = player.team === "red" ? -15 : 15;
+  player.x = player.team === "red" ? -18 : 18;
   player.z = z;
   player.yaw = player.team === "red" ? -Math.PI / 2 : Math.PI / 2;
   player.pitch = 0;
@@ -144,6 +150,7 @@ function resetPlayerForRound(player, room) {
   player.ammo = MAGAZINE_SIZE;
   player.alive = true;
   player.reloading = false;
+  player.crouched = false;
   player.lastShot = 0;
   player.reloadToken = (player.reloadToken || 0) + 1;
   player.lastState = 0;
@@ -152,7 +159,6 @@ function resetPlayerForRound(player, room) {
 function startRound(code) {
   const room = rooms.get(code);
   if (!room) return;
-
   room.phase = "playing";
   room.lastRoundWinner = null;
 
@@ -161,6 +167,9 @@ function startRound(code) {
   }
 
   broadcastState(code);
+  io.to(code).emit("combatMessage", {
+    text: `ROUND ${room.roundNumber} - FIGHT!`
+  });
 }
 
 function startMatch(socket) {
@@ -171,34 +180,31 @@ function startMatch(socket) {
     socket.emit("roomError", "Only the host can start the match.");
     return;
   }
-
   if (room.phase !== "lobby") {
     socket.emit("roomError", "The match is already running.");
     return;
   }
 
-  const counts = getPlayerTeamCounts(room);
-  if (!counts.red || !counts.blue) {
+  const red = teamCount(room, "red");
+  const blue = teamCount(room, "blue");
+
+  if (!red || !blue) {
     socket.emit("roomError", "Both teams need at least one player.");
     return;
   }
 
-  if (counts.red > MAX_TEAM_SIZE || counts.blue > MAX_TEAM_SIZE) {
+  if (red > MAX_TEAM_SIZE || blue > MAX_TEAM_SIZE) {
     socket.emit("roomError", "Teams can only have five players each.");
     return;
   }
 
-  if (room.roundTimer) {
-    clearTimeout(room.roundTimer);
-    room.roundTimer = null;
-  }
-
+  if (room.roundTimer) clearTimeout(room.roundTimer);
+  room.roundTimer = null;
   room.redWins = 0;
   room.blueWins = 0;
   room.roundNumber = 1;
   room.matchWinner = null;
   room.lastRoundWinner = null;
-
   startRound(code);
 }
 
@@ -209,20 +215,17 @@ function checkRoundEnd(code) {
   const redPlayers = [...room.players.values()].filter(p => p.team === "red");
   const bluePlayers = [...room.players.values()].filter(p => p.team === "blue");
 
+  if (!redPlayers.length || !bluePlayers.length) return;
+
   const redAlive = redPlayers.some(p => p.alive);
   const blueAlive = bluePlayers.some(p => p.alive);
-
-  // A round cannot finish before both teams have players.
-  if (!redPlayers.length || !bluePlayers.length) return;
   if (redAlive && blueAlive) return;
 
   let winner = null;
-
   if (redAlive && !blueAlive) winner = "red";
-  else if (blueAlive && !redAlive) winner = "blue";
+  if (blueAlive && !redAlive) winner = "blue";
 
   room.lastRoundWinner = winner;
-
   if (winner === "red") room.redWins++;
   if (winner === "blue") room.blueWins++;
 
@@ -247,8 +250,7 @@ function checkRoundEnd(code) {
     current.roundNumber++;
     current.roundTimer = null;
 
-    const counts = getPlayerTeamCounts(current);
-    if (!counts.red || !counts.blue) {
+    if (!teamCount(current, "red") || !teamCount(current, "blue")) {
       current.phase = "lobby";
       broadcastState(code);
       return;
@@ -258,20 +260,11 @@ function checkRoundEnd(code) {
   }, ROUND_DELAY_MS);
 }
 
-function rayBoxDistance(origin, direction, box) {
-  const min = [
-    box.x - box.w / 2,
-    0,
-    box.z - box.d / 2
-  ];
-  const max = [
-    box.x + box.w / 2,
-    box.h,
-    box.z + box.d / 2
-  ];
+function rayBoxDistance(origin, direction, b) {
+  const min = [b.x - b.w / 2, 0, b.z - b.d / 2];
+  const max = [b.x + b.w / 2, b.h, b.z + b.d / 2];
   const o = [origin.x, origin.y, origin.z];
   const d = [direction.x, direction.y, direction.z];
-
   let tMin = -Infinity;
   let tMax = Infinity;
 
@@ -283,16 +276,10 @@ function rayBoxDistance(origin, direction, box) {
 
     let t1 = (min[axis] - o[axis]) / d[axis];
     let t2 = (max[axis] - o[axis]) / d[axis];
-
-    if (t1 > t2) {
-      const temp = t1;
-      t1 = t2;
-      t2 = temp;
-    }
+    if (t1 > t2) [t1, t2] = [t2, t1];
 
     tMin = Math.max(tMin, t1);
     tMax = Math.min(tMax, t2);
-
     if (tMax < tMin) return Infinity;
   }
 
@@ -301,32 +288,32 @@ function rayBoxDistance(origin, direction, box) {
 }
 
 function findShotTarget(room, shooter, direction) {
-  const origin = { x: shooter.x, y: 1.7, z: shooter.z };
-
-  // Stop shots at the outer walls or any piece of cover.
-  const blockers = [
-    { x: 0, z: -22, w: 44, d: 1, h: 6 },
-    { x: 0, z: 22, w: 44, d: 1, h: 6 },
-    { x: -22, z: 0, w: 1, d: 44, h: 6 },
-    { x: 22, z: 0, w: 1, d: 44, h: 6 },
-    ...COVER
-  ];
+  const origin = {
+    x: shooter.x,
+    y: shooter.crouched ? 1.05 : 1.7,
+    z: shooter.z
+  };
 
   let blockDistance = Infinity;
-  for (const b of blockers) {
-    blockDistance = Math.min(blockDistance, rayBoxDistance(origin, direction, b));
+  for (const b of COVER) {
+    blockDistance = Math.min(
+      blockDistance,
+      rayBoxDistance(origin, direction, b)
+    );
   }
 
   let best = null;
   let bestDistance = Infinity;
 
   for (const target of room.players.values()) {
-    if (target.id === shooter.id || target.team === shooter.team || !target.alive) continue;
+    if (target.id === shooter.id || target.team === shooter.team || !target.alive) {
+      continue;
+    }
 
+    const targetY = target.crouched ? 1.05 : 1.7;
     const dx = target.x - origin.x;
     const dz = target.z - origin.z;
     const horizontalDirSq = direction.x * direction.x + direction.z * direction.z;
-
     if (horizontalDirSq < 0.0001) continue;
 
     const t = (dx * direction.x + dz * direction.z) / horizontalDirSq;
@@ -334,23 +321,22 @@ function findShotTarget(room, shooter, direction) {
 
     const hitX = origin.x + direction.x * t;
     const hitZ = origin.z + direction.z * t;
-    const horizontalDistance = Math.hypot(hitX - target.x, hitZ - target.z);
 
-    if (horizontalDistance > 0.43) continue;
+    if (Math.hypot(hitX - target.x, hitZ - target.z) > 0.48) continue;
 
     const rayDistance = t / Math.sqrt(horizontalDirSq);
     const hitY = origin.y + direction.y * rayDistance;
+    const bottom = targetY - 1.0;
+    const top = targetY + 0.35;
 
-    if (hitY < 0.08 || hitY > 2.18) continue;
+    if (hitY < bottom || hitY > top) continue;
     if (rayDistance >= bestDistance) continue;
 
-    let zone;
-    let damage;
-
-    if (hitY >= 1.52) {
+    let zone, damage;
+    if (hitY >= targetY + 0.16) {
       zone = "head";
       damage = 40;
-    } else if (hitY < 0.72) {
+    } else if (hitY < targetY - 0.48) {
       zone = "legs";
       damage = 10;
     } else {
@@ -374,21 +360,15 @@ function fireShot(socket, aim) {
   if (!room || !shooter || room.phase !== "playing" || !shooter.alive) return;
 
   const now = Date.now();
-
   if (now - shooter.lastShot < SHOT_COOLDOWN_MS) return;
+
   if (shooter.reloading) {
-    socket.emit("shotResult", {
-      ammo: shooter.ammo,
-      reloading: true
-    });
+    socket.emit("shotResult", { ammo: shooter.ammo, reloading: true });
     return;
   }
 
   if (shooter.ammo <= 0) {
-    socket.emit("shotResult", {
-      ammo: 0,
-      reloading: false
-    });
+    socket.emit("shotResult", { ammo: 0, reloading: false });
     return;
   }
 
@@ -398,7 +378,7 @@ function fireShot(socket, aim) {
   if (aim && typeof aim === "object") {
     if (Number.isFinite(aim.yaw)) shooter.yaw = aim.yaw;
     if (Number.isFinite(aim.pitch)) {
-      shooter.pitch = Math.max(-1.35, Math.min(1.35, aim.pitch));
+      shooter.pitch = Math.max(-1.25, Math.min(1.25, aim.pitch));
     }
   }
 
@@ -416,17 +396,14 @@ function fireShot(socket, aim) {
   io.to(code).emit("playerShot", {
     id: shooter.id,
     x: shooter.x,
-    y: 1.7,
+    y: shooter.crouched ? 1.05 : 1.7,
     z: shooter.z,
     yaw: shooter.yaw,
     pitch: shooter.pitch
   });
 
   const result = findShotTarget(room, shooter, direction);
-  const response = {
-    ammo: shooter.ammo,
-    reloading: shooter.reloading
-  };
+  const response = { ammo: shooter.ammo, reloading: shooter.reloading };
 
   if (result && result.blocked) {
     response.blocked = true;
@@ -489,8 +466,7 @@ function reloadPlayer(socket) {
     const currentRoom = rooms.get(code);
     const currentPlayer = currentRoom && currentRoom.players.get(player.id);
 
-    if (!currentRoom || !currentPlayer) return;
-    if (currentPlayer.reloadToken !== token) return;
+    if (!currentRoom || !currentPlayer || currentPlayer.reloadToken !== token) return;
 
     if (currentRoom.phase !== "playing" || !currentPlayer.alive) {
       currentPlayer.reloading = false;
@@ -529,32 +505,21 @@ function leaveCurrentRoom(socket) {
 
   if (room.hostId === socket.id) {
     room.hostId = room.players.keys().next().value;
-    io.to(code).emit("combatMessage", { text: "A new host has been selected." });
+    io.to(code).emit("combatMessage", {
+      text: "A new host has been selected."
+    });
   }
 
   broadcastState(code);
 
-  if (room.phase === "playing") {
-    const redCount = teamCount(room, "red");
-    const blueCount = teamCount(room, "blue");
-
-    if (!redCount || !blueCount) {
+  if (room.phase === "playing" || room.phase === "between") {
+    if (!teamCount(room, "red") || !teamCount(room, "blue")) {
       if (room.roundTimer) clearTimeout(room.roundTimer);
       room.roundTimer = null;
       room.phase = "lobby";
       broadcastState(code);
-    } else {
+    } else if (room.phase === "playing") {
       checkRoundEnd(code);
-    }
-  } else if (room.phase === "between") {
-    const redCount = teamCount(room, "red");
-    const blueCount = teamCount(room, "blue");
-
-    if (!redCount || !blueCount) {
-      if (room.roundTimer) clearTimeout(room.roundTimer);
-      room.roundTimer = null;
-      room.phase = "lobby";
-      broadcastState(code);
     }
   }
 }
@@ -563,14 +528,12 @@ function joinRoom(socket, roomCode, name) {
   if (typeof roomCode !== "string") return;
 
   roomCode = roomCode.trim().toUpperCase();
-
-  if (!/^[A-Z0-9]{4}$/.test(roomCode)) {
-    socket.emit("roomError", "Room codes must be 4 letters or numbers.");
+  if (!/^[A-Z0-9]{5}$/.test(roomCode)) {
+    socket.emit("roomError", "Room codes must be 5 letters or numbers.");
     return;
   }
 
   const room = rooms.get(roomCode);
-
   if (!room) {
     socket.emit("roomError", "That room doesn't exist. Ask the host to create it first.");
     return;
@@ -581,25 +544,41 @@ function joinRoom(socket, roomCode, name) {
     return;
   }
 
+  // Rejoining the same room should not remove the room before joining again.
+  if (socket.data.roomCode === roomCode && room.players.has(socket.id)) {
+    socket.emit("joinedRoom", {
+      roomCode,
+      id: socket.id,
+      hostId: room.hostId,
+      state: publicState(room)
+    });
+    return;
+  }
+
   if (room.players.size >= MAX_PLAYERS) {
     socket.emit("roomError", "This lobby is full (10 players maximum).");
     return;
   }
 
-  const team = chooseTeam(room);
+  leaveCurrentRoom(socket);
 
+  const currentRoom = rooms.get(roomCode);
+  if (!currentRoom) {
+    socket.emit("roomError", "That room is no longer available.");
+    return;
+  }
+
+  const team = chooseTeam(currentRoom);
   if (!team) {
     socket.emit("roomError", "Both teams are full.");
     return;
   }
 
-  leaveCurrentRoom(socket);
-
   const player = {
     id: socket.id,
     name: cleanName(name),
     team,
-    x: team === "red" ? -15 : 15,
+    x: team === "red" ? -18 : 18,
     y: 1.7,
     z: 0,
     yaw: team === "red" ? -Math.PI / 2 : Math.PI / 2,
@@ -608,20 +587,21 @@ function joinRoom(socket, roomCode, name) {
     ammo: MAGAZINE_SIZE,
     alive: true,
     reloading: false,
+    crouched: false,
     lastState: 0,
     lastShot: 0,
     reloadToken: 0
   };
 
-  room.players.set(socket.id, player);
+  currentRoom.players.set(socket.id, player);
   socket.join(roomCode);
   socket.data.roomCode = roomCode;
 
   socket.emit("joinedRoom", {
     roomCode,
     id: socket.id,
-    hostId: room.hostId,
-    state: publicState(room)
+    hostId: currentRoom.hostId,
+    state: publicState(currentRoom)
   });
 
   broadcastState(roomCode);
@@ -638,7 +618,40 @@ io.on("connection", socket => {
     const room = makeRoom(socket.id);
     rooms.set(code, room);
 
-    joinRoom(socket, code, name);
+    // Host joins the new room; it is not exposed until it has been created.
+    const team = "red";
+    const player = {
+      id: socket.id,
+      name: cleanName(name),
+      team,
+      x: -18,
+      y: 1.7,
+      z: 0,
+      yaw: -Math.PI / 2,
+      pitch: 0,
+      health: 100,
+      ammo: MAGAZINE_SIZE,
+      alive: true,
+      reloading: false,
+      crouched: false,
+      lastState: 0,
+      lastShot: 0,
+      reloadToken: 0
+    };
+
+    room.players.set(socket.id, player);
+    socket.join(code);
+    socket.data.roomCode = code;
+
+    socket.emit("joinedRoom", {
+      roomCode: code,
+      id: socket.id,
+      hostId: room.hostId,
+      state: publicState(room)
+    });
+
+    broadcastState(code);
+    console.log(`${player.name} created room ${code}`);
   });
 
   socket.on("joinRoom", data => {
@@ -650,14 +663,12 @@ io.on("connection", socket => {
     const code = socket.data.roomCode;
     const room = code && rooms.get(code);
 
-    if (!room || room.phase !== "lobby") return;
-    if (socket.id !== room.hostId) return;
+    if (!room || room.phase !== "lobby" || socket.id !== room.hostId) return;
     if (!data || typeof data.playerId !== "string") return;
     if (!["red", "blue"].includes(data.team)) return;
 
     const target = room.players.get(data.playerId);
-    if (!target) return;
-    if (target.team === data.team) return;
+    if (!target || target.team === data.team) return;
 
     if (teamCount(room, data.team) >= MAX_TEAM_SIZE) {
       socket.emit("roomError", "That team already has five players.");
@@ -669,7 +680,6 @@ io.on("connection", socket => {
   });
 
   socket.on("startMatch", () => startMatch(socket));
-
   socket.on("leaveRoom", () => leaveCurrentRoom(socket));
 
   socket.on("playerState", state => {
@@ -687,18 +697,20 @@ io.on("connection", socket => {
     const finite = (v, fallback) =>
       typeof v === "number" && Number.isFinite(v) ? v : fallback;
 
-    player.x = Math.max(-20.3, Math.min(20.3, finite(state.x, player.x)));
-    player.z = Math.max(-20.3, Math.min(20.3, finite(state.z, player.z)));
+    player.x = Math.max(-22.5, Math.min(22.5, finite(state.x, player.x)));
+    player.z = Math.max(-22.5, Math.min(22.5, finite(state.z, player.z)));
     player.yaw = finite(state.yaw, player.yaw);
-    player.pitch = Math.max(-1.35, Math.min(1.35, finite(state.pitch, player.pitch)));
+    player.pitch = Math.max(-1.25, Math.min(1.25, finite(state.pitch, player.pitch)));
+    player.crouched = Boolean(state.crouched);
 
     socket.to(code).emit("playerMoved", {
       id: player.id,
       x: player.x,
-      y: 1.7,
+      y: player.crouched ? 1.05 : 1.7,
       z: player.z,
       yaw: player.yaw,
-      pitch: player.pitch
+      pitch: player.pitch,
+      crouched: player.crouched
     });
   });
 
@@ -715,4 +727,4 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Tactical Strike running on port ${PORT}`);
 });
-
+```
