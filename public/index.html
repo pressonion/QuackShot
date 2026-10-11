@@ -10,17 +10,18 @@
 body{background:#080d1b;color:#fff;font-family:Arial,sans-serif;overflow:hidden}
 canvas{display:block;width:100vw;height:100vh;cursor:crosshair}
 .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse,#192b4cee,#070b18f7);z-index:5}
-.panel{width:min(440px,92vw);padding:32px;text-align:center;background:#101a30;border:1px solid #34496e;border-radius:20px;box-shadow:0 0 60px #00d9ff18}
+.panel{width:min(440px,92vw);max-height:95vh;overflow-y:auto;padding:30px;text-align:center;background:#101a30;border:1px solid #34496e;border-radius:20px;box-shadow:0 0 60px #00d9ff18}
 .logo{font-size:clamp(38px,8vw,62px);font-weight:1000;letter-spacing:-3px;text-shadow:0 0 25px #00d9ff55}
 .logo span{color:#00e5ff}
 .subtitle{margin:12px 0 20px;color:#b3c5e0;font-size:14px;line-height:1.6}
 button{border:0;border-radius:10px;background:#00d9f5;color:#061321;padding:15px;width:100%;margin-top:12px;font-weight:900;font-size:16px;cursor:pointer}
 button:hover{background:#70f3ff}
+button:active{transform:scale(.98)}
 .secondary{background:#293955;color:white}
 .secondary:hover{background:#3a5075}
 .controls{text-align:left;background:#0b1324;border-radius:12px;padding:15px;color:#bac9e0;font-size:13px;line-height:2}
 kbd{display:inline-block;min-width:26px;text-align:center;padding:1px 5px;background:#293956;border-radius:4px;color:white}
-#endScreen{display:none}
+#endScreen,#pauseScreen{display:none}
 #hud{position:fixed;inset:0;pointer-events:none;display:none}
 .top{position:absolute;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;gap:10px}
 .card{background:#091224e8;border:1px solid #34496e;border-radius:10px;padding:11px 15px;font-size:13px}
@@ -29,7 +30,8 @@ kbd{display:inline-block;min-width:26px;text-align:center;padding:1px 5px;backgr
 #message{position:absolute;top:100px;width:100%;text-align:center;font-weight:900;font-size:20px;text-shadow:0 3px 10px #000}
 #help{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#081123dd;padding:10px 16px;border-radius:8px;color:#c6d6ed;font-size:12px}
 #pauseBtn{position:absolute;right:18px;bottom:55px;width:auto;pointer-events:auto;padding:10px 15px;margin:0;background:#1c2c49;color:white}
-#pauseScreen{display:none}
+select{background:#182744;color:white;border:0;padding:5px;border-radius:5px}
+#fatalError{display:none;position:fixed;bottom:0;left:0;right:0;background:#791d35;color:white;padding:12px;font:13px monospace;z-index:20;white-space:pre-wrap;max-height:35vh;overflow:auto}
 </style>
 </head>
 <body>
@@ -40,7 +42,7 @@ kbd{display:inline-block;min-width:26px;text-align:center;padding:1px 5px;backgr
  <div class="panel">
   <div class="logo">RECOIL <span>ROYALE</span></div>
   <div class="subtitle">Your cannon doesn't hurt anyone.<br>It launches YOU in the opposite direction.<br>Knock your opponent off the rooftop!</div>
-  <button onclick="startGame()">PLAY VS BOT</button>
+  <button id="playButton" type="button">PLAY VS BOT</button>
   <div class="controls" style="margin-top:20px">
    <b>CONTROLS</b><br>
    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move<br>
@@ -57,18 +59,18 @@ kbd{display:inline-block;min-width:26px;text-align:center;padding:1px 5px;backgr
  <div class="panel">
   <div id="resultTitle" class="logo">VICTORY!</div>
   <div id="resultText" class="subtitle">You won!</div>
-  <button onclick="startGame()">PLAY AGAIN</button>
-  <button class="secondary" onclick="showMenu()">MAIN MENU</button>
+  <button id="againButton" type="button">PLAY AGAIN</button>
+  <button id="endMenuButton" class="secondary" type="button">MAIN MENU</button>
  </div>
 </div>
 
 <div id="pauseScreen" class="overlay">
  <div class="panel">
   <div class="logo">PAUSED</div>
-  <div class="subtitle">Take a breath. The rooftop isn't going anywhere.</div>
-  <button onclick="resumeGame()">RESUME</button>
-  <button class="secondary" onclick="startGame()">RESTART ROUND</button>
-  <button class="secondary" onclick="showMenu()">MAIN MENU</button>
+  <div class="subtitle">The rooftop can wait.</div>
+  <button id="resumeButton" type="button">RESUME</button>
+  <button id="restartButton" class="secondary" type="button">RESTART ROUND</button>
+  <button id="pauseMenuButton" class="secondary" type="button">MAIN MENU</button>
  </div>
 </div>
 
@@ -77,168 +79,183 @@ kbd{display:inline-block;min-width:26px;text-align:center;padding:1px 5px;backgr
   <div class="card"><div class="label">ROUND</div><div class="big" id="roundText">1</div></div>
   <div class="card" style="text-align:center"><div class="label">YOUR KNOCKOUTS</div><div class="big" id="scoreText">0</div></div>
   <div class="card" style="text-align:right"><div class="label">BOT DIFFICULTY</div>
-   <select id="difficulty" style="background:#182744;color:white;border:0;padding:5px;border-radius:5px;pointer-events:auto">
-    <option value="easy">Easy</option><option value="normal" selected>Normal</option><option value="hard">Hard</option>
+   <select id="difficulty">
+    <option value="easy">Easy</option>
+    <option value="normal" selected>Normal</option>
+    <option value="hard">Hard</option>
    </select>
   </div>
  </div>
  <div id="message"></div>
  <div id="help">WASD Move · Mouse Aim · Click Fire · Space Jump · R Restart</div>
- <button id="pauseBtn" onclick="pauseGame()">PAUSE</button>
+ <button id="pauseBtn" type="button">PAUSE</button>
 </div>
 
+<div id="fatalError"></div>
+
 <script>
-(() => {
 "use strict";
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+(function(){
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+const $=id=>document.getElementById(id);
 
 let W=innerWidth,H=innerHeight,DPR=1;
-function resize(){
- DPR=Math.min(devicePixelRatio||1,2);
- W=innerWidth;H=innerHeight;
- canvas.width=Math.floor(W*DPR);
- canvas.height=Math.floor(H*DPR);
- canvas.style.width=W+"px";canvas.style.height=H+"px";
- ctx.setTransform(DPR,0,0,DPR,0,0);
-}
-addEventListener("resize",resize);
-resize();
-
-const keys={};
-const mouse={x:W/2,y:H/2,down:false};
 let running=false,paused=false,ended=false;
-let player,bot,shots=[],particles=[];
-let round=1,score=0,frame=0,arena={x:0,y:0,w:0,h:0};
-let lastShot=0,messageTimer=0;
-let camera={x:0,y:0};
-let gameTime=0;
+let animationId=0,frame=0,score=0,round=1;
+let player=null,bot=null,shots=[],particles=[];
+let messageTimer=0;
+let arena={x:0,y:0,w:0,h:0};
+const keys={};
+const mouse={x:innerWidth/2,y:innerHeight/2,down:false};
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(a,b)=>a+Math.random()*(b-a);
-const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
-function setArena(){
- arena.w=Math.min(800,W-50);
- arena.h=Math.min(540,H-130);
- arena.w=Math.max(280,arena.w);
- arena.h=Math.max(240,arena.h);
- arena.x=(W-arena.w)/2;
- arena.y=(H-arena.h)/2+8;
+function resize(){
+ W=innerWidth;H=innerHeight;
+ DPR=Math.min(window.devicePixelRatio||1,2);
+ canvas.width=Math.floor(W*DPR);
+ canvas.height=Math.floor(H*DPR);
+ canvas.style.width=W+"px";
+ canvas.style.height=H+"px";
+ ctx.setTransform(DPR,0,0,DPR,0,0);
+ setArena();
+ if(!running)draw();
 }
+function setArena(){
+ arena.w=Math.max(260,Math.min(800,W-50));
+ arena.h=Math.max(220,Math.min(540,H-110));
+ arena.x=(W-arena.w)/2;
+ arena.y=(H-arena.h)/2+5;
+}
+window.addEventListener("resize",resize);
+
+function showError(error){
+ const box=$("fatalError");
+ box.style.display="block";
+ box.textContent="Game error:\n"+(error&&error.stack?error.stack:String(error));
+ console.error(error);
+}
+
+window.addEventListener("error",e=>{
+ showError(e.error||e.message||"Unknown JavaScript error");
+});
+window.addEventListener("unhandledrejection",e=>{
+ showError(e.reason||"Unhandled promise rejection");
+});
 
 function makeFighter(x,y,color,isBot){
  return {
   x,y,vx:0,vy:0,z:0,vz:0,
-  color,isBot,
-  radius:17,
-  angle:0,
-  cooldown:0,
-  alive:true,
-  recoilFlash:0,
-  invulnerable:60,
-  jumps:0,
-  knockouts:0,
-  name:isBot?"BOT":"YOU"
+  color,isBot,radius:17,angle:0,
+  cooldown:0,alive:true,recoilFlash:0,
+  invulnerable:50,name:isBot?"BOT":"YOU"
  };
 }
 
 function startGame(){
- document.getElementById("menu").style.display="none";
- document.getElementById("endScreen").style.display="none";
- document.getElementById("pauseScreen").style.display="none";
- document.getElementById("hud").style.display="block";
- setArena();
- player=makeFighter(arena.x+arena.w*.3,arena.y+arena.h*.52,"#00e5ff",false);
- bot=makeFighter(arena.x+arena.w*.7,arena.y+arena.h*.48,"#ff4f83",true);
- shots=[];particles=[];
- frame=0;gameTime=0;lastShot=0;
- running=true;paused=false;ended=false;
- mouse.down=false;
- showMessage("KNOCK THEM OFF!",100);
- requestAnimationFrame(loop);
+ try{
+  if(animationId)cancelAnimationFrame(animationId);
+  setArena();
+  player=makeFighter(arena.x+arena.w*.28,arena.y+arena.h*.5,"#00e5ff",false);
+  bot=makeFighter(arena.x+arena.w*.72,arena.y+arena.h*.5,"#ff4f83",true);
+  shots=[];
+  particles=[];
+  frame=0;
+  messageTimer=0;
+  mouse.down=false;
+  running=true;
+  paused=false;
+  ended=false;
+
+  $("menu").style.display="none";
+  $("endScreen").style.display="none";
+  $("pauseScreen").style.display="none";
+  $("hud").style.display="block";
+  $("fatalError").style.display="none";
+  $("scoreText").textContent=score;
+  $("roundText").textContent=round;
+  showMessage("KNOCK THEM OFF!",100);
+  draw();
+  animationId=requestAnimationFrame(loop);
+ }catch(error){
+  showError(error);
+ }
 }
 
 function showMenu(){
  running=false;paused=false;ended=false;
- document.getElementById("hud").style.display="none";
- document.getElementById("endScreen").style.display="none";
- document.getElementById("pauseScreen").style.display="none";
- document.getElementById("menu").style.display="flex";
+ if(animationId)cancelAnimationFrame(animationId);
+ $("hud").style.display="none";
+ $("endScreen").style.display="none";
+ $("pauseScreen").style.display="none";
+ $("menu").style.display="flex";
+ mouse.down=false;
+ draw();
 }
+
 function pauseGame(){
- if(!running||ended)return;
+ if(!running||ended||paused)return;
  paused=true;
- document.getElementById("pauseScreen").style.display="flex";
+ mouse.down=false;
+ $("pauseScreen").style.display="flex";
+ if(animationId)cancelAnimationFrame(animationId);
 }
+
 function resumeGame(){
+ if(!running||ended)return;
  paused=false;
- document.getElementById("pauseScreen").style.display="none";
- requestAnimationFrame(loop);
+ $("pauseScreen").style.display="none";
+ animationId=requestAnimationFrame(loop);
 }
+
 function finish(won){
  if(ended)return;
- ended=true;running=false;
- document.getElementById("endScreen").style.display="flex";
- document.getElementById("resultTitle").textContent=won?"VICTORY!":"KNOCKED OUT!";
- document.getElementById("resultTitle").style.color=won?"#00e5ff":"#ff608b";
- document.getElementById("resultText").textContent=won?
+ ended=true;
+ running=false;
+ paused=false;
+ if(animationId)cancelAnimationFrame(animationId);
+ $("endScreen").style.display="flex";
+ $("resultTitle").textContent=won?"VICTORY!":"KNOCKED OUT!";
+ $("resultTitle").style.color=won?"#00e5ff":"#ff608b";
+ $("resultText").textContent=won?
   "You knocked the bot off the rooftop! Total knockouts: "+score:
-  "You fell off the rooftop. Try using recoil to recover mid-air!";
-}
-function showMessage(s,t=75){
- const el=document.getElementById("message");
- el.textContent=s;messageTimer=t;
+  "You fell off the rooftop. Use recoil and jumping to recover!";
+ mouse.down=false;
 }
 
-addEventListener("keydown",e=>{
- const k=e.key.toLowerCase();
- keys[k]=true;
- if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault();
- if(k==="r"&&(running||ended))startGame();
- if(k==="escape"&&running&&!paused)pauseGame();
- else if(k==="escape"&&paused)resumeGame();
- if(k===" "&&!e.repeat&&running&&!paused&&player&&player.alive)jump(player);
-});
-addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
-canvas.addEventListener("mousemove",e=>{
- const r=canvas.getBoundingClientRect();
- mouse.x=e.clientX-r.left;mouse.y=e.clientY-r.top;
-});
-canvas.addEventListener("mousedown",e=>{if(e.button===0)mouse.down=true;});
-addEventListener("mouseup",e=>{if(e.button===0)mouse.down=false;});
-canvas.addEventListener("contextmenu",e=>e.preventDefault());
+function showMessage(text,t=70){
+ $("message").textContent=text;
+ messageTimer=t;
+}
 
 function jump(f){
- if(!f.alive||f.z>0)return;
- f.vz=8.3;
- f.jumps=1;
- burst(f.x,f.y-f.z, f.color,7);
+ if(!f||!f.alive||f.z>0)return;
+ f.vz=8.5;
+ burst(f.x,f.y,f.color,7);
 }
 
 function fire(f,angle){
- if(!f.alive||f.cooldown>0)return;
- f.cooldown=f.isBot?rand(39,55):17;
+ if(!f||!f.alive||f.cooldown>0)return;
+ f.cooldown=f.isBot?42:17;
 
- // Firing launches the shooter in the opposite direction.
+ // The cannon launches its owner backward.
  const power=f.isBot?5.6:6.5;
  f.vx-=Math.cos(angle)*power;
  f.vy-=Math.sin(angle)*power;
- f.vz+=0.8;
- f.recoilFlash=9;
+ f.vz+=.7;
+ f.recoilFlash=8;
 
- const muzzle=25;
- const sx=f.x+Math.cos(angle)*muzzle;
- const sy=f.y-f.z+Math.sin(angle)*muzzle;
+ const sx=f.x+Math.cos(angle)*27;
+ const sy=f.y-f.z+Math.sin(angle)*27;
  shots.push({
   x:sx,y:sy,
   vx:Math.cos(angle)*8.5,
   vy:Math.sin(angle)*8.5,
-  owner:f,
-  life:65,
-  color:f.color,
-  radius:7
+  owner:f,life:65,color:f.color,radius:7
  });
  burst(sx,sy,f.color,5);
 }
@@ -246,13 +263,47 @@ function fire(f,angle){
 function burst(x,y,color,count){
  for(let i=0;i<count;i++){
   const a=rand(0,Math.PI*2),s=rand(1,4);
-  particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
-   life:rand(12,30),max:30,color,size:rand(2,5)});
+  particles.push({
+   x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,
+   life:rand(12,30),max:30,color,size:rand(2,5)
+  });
  }
 }
 
+function botAI(f){
+ if(!player||!player.alive)return;
+ const dx=player.x-f.x,dy=player.y-f.y;
+ const d=Math.hypot(dx,dy)||1;
+ const diff=$("difficulty").value;
+ const skill=diff==="easy"?.7:diff==="hard"?1.25:1;
+ const desired=d>230?1:d<120?-1:0;
+ let mx=dx/d*desired;
+ let my=dy/d*desired;
+ const strafe=Math.sin(frame*.035);
+ mx+=-dy/d*strafe*.65;
+ my+=dx/d*strafe*.65;
+
+ const cx=arena.x+arena.w/2;
+ const cy=arena.y+arena.h/2;
+ if(f.x-arena.x<95)mx+=1.4;
+ if(arena.x+arena.w-f.x<95)mx-=1.4;
+ if(f.y-arena.y<95)my+=1.4;
+ if(arena.y+arena.h-f.y<95)my-=1.4;
+
+ const m=Math.hypot(mx,my)||1;
+ f.vx+=mx/m*.25*skill;
+ f.vy+=my/m*.25*skill;
+
+ const aim=Math.atan2(player.y+player.vy*5-f.y,player.x+player.vx*5-f.x);
+ const error=diff==="easy"?.2:diff==="hard"?.025:.08;
+ if(d<520&&Math.random()<(diff==="easy"?.025:diff==="hard"?.075:.05)){
+  fire(f,aim+Math.sin(frame*.11)*error);
+ }
+ if(f.z===0&&Math.random()<(diff==="hard"?.018:.008))jump(f);
+}
+
 function updateFighter(f){
- if(!f.alive)return;
+ if(!f||!f.alive)return;
  f.cooldown=Math.max(0,f.cooldown-1);
  f.invulnerable=Math.max(0,f.invulnerable-1);
  f.recoilFlash=Math.max(0,f.recoilFlash-1);
@@ -270,107 +321,65 @@ function updateFighter(f){
   botAI(f);
  }
 
- const maxSpeed=f.isBot?4.0:4.5;
+ const maxSpeed=f.isBot?4:4.5;
  const speed=Math.hypot(f.vx,f.vy);
- if(speed>maxSpeed){f.vx=f.vx/speed*maxSpeed;f.vy=f.vy/speed*maxSpeed;}
+ if(speed>maxSpeed){
+  f.vx=f.vx/speed*maxSpeed;
+  f.vy=f.vy/speed*maxSpeed;
+ }
 
- f.x+=f.vx;f.y+=f.vy;
- f.vx*=.955;f.vy*=.955;
+ f.x+=f.vx;
+ f.y+=f.vy;
+ f.vx*=.955;
+ f.vy*=.955;
 
  f.z+=f.vz;
  f.vz-=.38;
- if(f.z<0){f.z=0;f.vz=0;f.jumps=0;}
+ if(f.z<0){f.z=0;f.vz=0;}
 
- // A little edge air-control is possible; momentum remains important.
- const margin=12;
- const left=arena.x+margin,right=arena.x+arena.w-margin;
- const top=arena.y+margin,bottom=arena.y+arena.h-margin;
- if(f.x<left&&f.vx<0)f.vx-=.12;
- if(f.x>right&&f.vx>0)f.vx+=.12;
- if(f.y<top&&f.vy<0)f.vy-=.12;
- if(f.y>bottom&&f.vy>0)f.vy+=.12;
+ if(f.x<arena.x+10&&f.vx<0)f.vx-=.12;
+ if(f.x>arena.x+arena.w-10&&f.vx>0)f.vx+=.12;
+ if(f.y<arena.y+10&&f.vy<0)f.vy-=.12;
+ if(f.y>arena.y+arena.h-10&&f.vy>0)f.vy+=.12;
 
- // Falling players can still fire and use recoil to try to recover.
  if(f.x<arena.x-65||f.x>arena.x+arena.w+65||
     f.y<arena.y-65||f.y>arena.y+arena.h+65){
   f.alive=false;
   burst(clamp(f.x,arena.x,arena.x+arena.w),
         clamp(f.y,arena.y,arena.y+arena.h),f.color,24);
+
   if(f===player){
    finish(false);
   }else{
    score++;
-   document.getElementById("scoreText").textContent=score;
-   showMessage("BOT KNOCKED OUT!",90);
+   $("scoreText").textContent=score;
+   showMessage("BOT KNOCKED OUT!",80);
    setTimeout(()=>{
-    if(running&&!ended)respawnBot();
-   },1000);
+    if(running&&!ended){
+     round++;
+     $("roundText").textContent=round;
+     bot=makeFighter(arena.x+arena.w*.72,
+       arena.y+rand(.3,.7)*arena.h,"#ff4f83",true);
+     showMessage("ROUND "+round,60);
+    }
+   },850);
   }
  }
-}
-
-function botAI(f){
- if(!player||!player.alive)return;
- const dx=player.x-f.x,dy=player.y-f.y;
- const d=Math.hypot(dx,dy)||1;
- const angle=Math.atan2(dy,dx);
- f.angle=angle;
-
- const diff=document.getElementById("difficulty").value;
- const skill=diff==="easy"?.65:diff==="hard"?1.25:1;
- // Move toward a useful firing distance and sidestep.
- const desired=d>230?1:d<115?-1:0;
- let mx=(dx/d)*desired;
- let my=(dy/d)*desired;
- const strafe=Math.sin(frame*.035+(f.x*.01));
- mx+=-dy/d*strafe*.65;
- my+=dx/d*strafe*.65;
-
- // Avoid edges by steering back toward the middle.
- const cx=arena.x+arena.w/2,cy=arena.y+arena.h/2;
- const edgeX=Math.min(f.x-arena.x,arena.x+arena.w-f.x);
- const edgeY=Math.min(f.y-arena.y,arena.y+arena.h-f.y);
- if(edgeX<100){mx+=(cx-f.x)/Math.max(1,arena.w)*2.2;my+=(cy-f.y)/Math.max(1,arena.h)*.5;}
- if(edgeY<100){my+=(cy-f.y)/Math.max(1,arena.h)*2.2;mx+=(cx-f.x)/Math.max(1,arena.w)*.5;}
-
- const m=Math.hypot(mx,my)||1;
- f.vx+=mx/m*.24*skill;
- f.vy+=my/m*.24*skill;
-
- // The bot tries to shoot toward the player, with a little prediction.
- const predictedX=player.x+player.vx*5;
- const predictedY=player.y+player.vy*5;
- const aim=Math.atan2(predictedY-f.y+player.z*.1,predictedX-f.x);
- const error=diff==="easy"?.18:diff==="hard"?.025:.08;
- const actualAim=aim+Math.sin(frame*.11)*error;
- if(d<500&&Math.random()<(diff==="easy"?.025:diff==="hard"?.075:.05)){
-  fire(f,actualAim);
- }
-
- // Jump when under threat or when a nearby shot is approaching.
- if(f.z===0&&Math.random()<(diff==="hard"?.018:.008))jump(f);
-}
-
-function respawnBot(){
- if(ended||!running)return;
- bot=makeFighter(
-  arena.x+arena.w*.72,
-  arena.y+rand(.3,.7)*arena.h,
-  "#ff4f83",true
- );
- showMessage("NEW CHALLENGER!",65);
 }
 
 function updateShots(){
  for(let i=shots.length-1;i>=0;i--){
   const s=shots[i];
-  s.x+=s.vx;s.y+=s.vy;s.life--;
+  s.x+=s.vx;
+  s.y+=s.vy;
+  s.life--;
   const target=s.owner===player?bot:player;
+
   if(target&&target.alive&&target.invulnerable<=0){
-   const tx=target.x,ty=target.y-target.z;
-   if(Math.hypot(s.x-tx,s.y-ty)<target.radius+s.radius+4){
-    // No damage: only a powerful knockback.
-    const dx=target.x-s.owner.x,dy=target.y-s.owner.y;
+   if(Math.hypot(s.x-target.x,s.y-(target.y-target.z))<
+      target.radius+s.radius+4){
+    const dx=target.x-s.owner.x;
+    const dy=target.y-s.owner.y;
     const len=Math.hypot(dx,dy)||1;
     target.vx+=(dx/len)*5.5+s.vx*.45;
     target.vy+=(dy/len)*5.5+s.vy*.45;
@@ -380,6 +389,7 @@ function updateShots(){
     continue;
    }
   }
+
   if(s.life<=0||s.x<arena.x-180||s.x>arena.x+arena.w+180||
      s.y<arena.y-180||s.y>arena.y+arena.h+180){
    shots.splice(i,1);
@@ -390,43 +400,52 @@ function updateShots(){
 function updateParticles(){
  for(let i=particles.length-1;i>=0;i--){
   const p=particles[i];
-  p.x+=p.vx;p.y+=p.vy;p.vx*=.96;p.vy*=.96;p.life--;
+  p.x+=p.vx;p.y+=p.vy;
+  p.vx*=.96;p.vy*=.96;
+  p.life--;
   if(p.life<=0)particles.splice(i,1);
  }
 }
 
 function drawBackground(){
- ctx.fillStyle="#101a30";ctx.fillRect(0,0,W,H);
- // Soft background dots.
- ctx.fillStyle="#243652";
- for(let x=0;x<W;x+=38)for(let y=0;y<H;y+=38){
-  ctx.globalAlpha=.2;
-  ctx.fillRect(x+(y%3),y,2,2);
+ ctx.fillStyle="#101a30";
+ ctx.fillRect(0,0,W,H);
+ ctx.fillStyle="#304361";
+ for(let x=0;x<W;x+=38){
+  for(let y=0;y<H;y+=38){
+   ctx.globalAlpha=.2;
+   ctx.fillRect(x,y,2,2);
+  }
  }
  ctx.globalAlpha=1;
- // Clouds below the rooftop.
+
  for(let i=0;i<12;i++){
   const x=((i*173+frame*.18)%(W+180))-90;
   const y=arena.y+((i*97)%(arena.h+150))-50;
-  ctx.fillStyle="#d8e8ff";ctx.globalAlpha=.06;
-  ctx.beginPath();ctx.ellipse(x,y,40,13,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#d8e8ff";
+  ctx.globalAlpha=.06;
+  ctx.beginPath();
+  ctx.ellipse(x,y,40,13,0,0,Math.PI*2);
+  ctx.fill();
  }
  ctx.globalAlpha=1;
 }
 
 function drawArena(){
  const {x,y,w,h}=arena;
- // Deep shadow and visible platform sides.
  ctx.fillStyle="#11182b";
  ctx.beginPath();
- ctx.moveTo(x,y);ctx.lineTo(x+w,y);ctx.lineTo(x+w+18,y+h+18);
- ctx.lineTo(x+18,y+h+18);ctx.closePath();ctx.fill();
+ ctx.moveTo(x,y);ctx.lineTo(x+w,y);
+ ctx.lineTo(x+w+18,y+h+18);ctx.lineTo(x+18,y+h+18);
+ ctx.closePath();ctx.fill();
 
  ctx.fillStyle="#243650";
  ctx.fillRect(x,y,w,h);
- ctx.strokeStyle="#6d88a9";ctx.lineWidth=5;ctx.strokeRect(x,y,w,h);
 
- // Rooftop tiles.
+ ctx.strokeStyle="#6d88a9";
+ ctx.lineWidth=5;
+ ctx.strokeRect(x,y,w,h);
+
  for(let xx=x+18;xx<x+w;xx+=45){
   ctx.strokeStyle="#354c6b";ctx.lineWidth=1;
   ctx.beginPath();ctx.moveTo(xx,y+3);ctx.lineTo(xx,y+h-3);ctx.stroke();
@@ -435,64 +454,61 @@ function drawArena(){
   ctx.beginPath();ctx.moveTo(x+3,yy);ctx.lineTo(x+w-3,yy);ctx.stroke();
  }
 
- // Warning stripe border.
- ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+ ctx.save();
+ ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
  ctx.strokeStyle="#ffbf4d";ctx.lineWidth=3;
  for(let i=-h;i<w;i+=26){
   ctx.beginPath();ctx.moveTo(x+i,y);ctx.lineTo(x+i+h,y+h);ctx.stroke();
  }
  ctx.restore();
 
- ctx.strokeStyle="#e5f4ff";ctx.lineWidth=2;ctx.strokeRect(x+12,y+12,w-24,h-24);
- // Four simple roof vents.
- for(const [vx,vy] of [[x+w*.22,y+h*.24],[x+w*.76,y+h*.26],[x+w*.25,y+h*.77],[x+w*.74,y+h*.75]]){
+ ctx.strokeStyle="#e5f4ff";ctx.lineWidth=2;
+ ctx.strokeRect(x+12,y+12,w-24,h-24);
+
+ for(const [vx,vy] of [
+  [x+w*.22,y+h*.24],[x+w*.76,y+h*.26],
+  [x+w*.25,y+h*.77],[x+w*.74,y+h*.75]
+ ]){
   ctx.fillStyle="#18253a";ctx.fillRect(vx-17,vy-12,34,24);
-  ctx.strokeStyle="#607b9e";ctx.lineWidth=2;ctx.strokeRect(vx-17,vy-12,34,24);
+  ctx.strokeStyle="#607b9e";ctx.lineWidth=2;
+  ctx.strokeRect(vx-17,vy-12,34,24);
   ctx.strokeStyle="#4e6583";
-  for(let n=-8;n<=8;n+=8){ctx.beginPath();ctx.moveTo(vx-12,vy+n);ctx.lineTo(vx+12,vy+n);ctx.stroke();}
+  for(let n=-8;n<=8;n+=8){
+   ctx.beginPath();ctx.moveTo(vx-12,vy+n);ctx.lineTo(vx+12,vy+n);ctx.stroke();
+  }
  }
 }
 
 function drawFighter(f){
- if(!f)return;
- if(!f.alive)return;
- const x=f.x,y=f.y-f.z;
- const angle=f.angle;
- // Ground shadow makes jumping readable.
+ if(!f||!f.alive)return;
  ctx.fillStyle="#03071380";
  ctx.beginPath();ctx.ellipse(f.x,f.y,20,10,0,0,Math.PI*2);ctx.fill();
 
+ const x=f.x,y=f.y-f.z;
  if(f.invulnerable>0&&Math.floor(frame/5)%2===0)ctx.globalAlpha=.45;
- // Character body.
  ctx.fillStyle=f.color;
  ctx.beginPath();ctx.arc(x,y,17,0,Math.PI*2);ctx.fill();
  ctx.lineWidth=3;ctx.strokeStyle="#fff";ctx.stroke();
 
- // Face.
  ctx.fillStyle="#102039";
- ctx.beginPath();ctx.arc(x+Math.cos(angle)*6,y+Math.sin(angle)*6,4,0,Math.PI*2);ctx.fill();
+ ctx.beginPath();
+ ctx.arc(x+Math.cos(f.angle)*6,y+Math.sin(f.angle)*6,4,0,Math.PI*2);
+ ctx.fill();
 
- // Cannon points in the aim direction.
- ctx.save();ctx.translate(x,y);ctx.rotate(angle);
- ctx.fillStyle="#111b2e";
- ctx.fillRect(3,-7,27,14);
- ctx.fillStyle=f.recoilFlash>0?"#ffffff":f.color;
+ ctx.save();
+ ctx.translate(x,y);ctx.rotate(f.angle);
+ ctx.fillStyle="#111b2e";ctx.fillRect(3,-7,27,14);
+ ctx.fillStyle=f.recoilFlash>0?"#fff":f.color;
  ctx.fillRect(13,-5,20,10);
- ctx.strokeStyle="#eaf7ff";ctx.lineWidth=1.5;
- ctx.strokeRect(13,-5,20,10);
+ ctx.strokeStyle="#eaf7ff";ctx.lineWidth=1.5;ctx.strokeRect(13,-5,20,10);
  if(f.recoilFlash>0){
   ctx.fillStyle="#fff";
   ctx.beginPath();ctx.arc(36,0,7,0,Math.PI*2);ctx.fill();
  }
  ctx.restore();
 
- // Nameplate.
  ctx.font="bold 12px Arial";ctx.textAlign="center";
  ctx.fillStyle="#fff";ctx.fillText(f.name,x,y-29);
- if(f.z>0){
-  ctx.font="11px Arial";ctx.fillStyle="#d5e7ff";
-  ctx.fillText("AIRBORNE",x,y-43);
- }
  ctx.globalAlpha=1;
 }
 
@@ -521,9 +537,11 @@ function drawAim(){
  ctx.setLineDash([5,6]);
  ctx.beginPath();
  ctx.moveTo(player.x,player.y-player.z);
- ctx.lineTo(player.x+Math.cos(player.angle)*110,player.y-player.z+Math.sin(player.angle)*110);
- ctx.stroke();ctx.setLineDash([]);
- // Crosshair.
+ ctx.lineTo(player.x+Math.cos(player.angle)*110,
+   player.y-player.z+Math.sin(player.angle)*110);
+ ctx.stroke();
+ ctx.setLineDash([]);
+
  ctx.strokeStyle="#fff";ctx.lineWidth=2;
  ctx.beginPath();
  ctx.moveTo(mouse.x-10,mouse.y);ctx.lineTo(mouse.x-4,mouse.y);
@@ -544,32 +562,74 @@ function draw(){
 
  if(player&&bot&&player.alive&&bot.alive){
   ctx.fillStyle="#081123bb";
-  ctx.fillRect(W/2-100, H-54, 200, 30);
-  ctx.strokeStyle="#58708f";ctx.strokeRect(W/2-100,H-54,200,30);
-  ctx.fillStyle="#c6d9f4";ctx.font="bold 12px Arial";ctx.textAlign="center";
+  ctx.fillRect(W/2-100,H-54,200,30);
+  ctx.strokeStyle="#58708f";
+  ctx.strokeRect(W/2-100,H-54,200,30);
+  ctx.fillStyle="#c6d9f4";
+  ctx.font="bold 12px Arial";ctx.textAlign="center";
   ctx.fillText("NO DAMAGE · KNOCKBACK ONLY",W/2,H-35);
  }
 }
 
 function loop(){
  if(!running||paused||ended)return;
- frame++;gameTime++;
- updateFighter(player);
- updateFighter(bot);
- updateShots();
- updateParticles();
+ try{
+  frame++;
+  updateFighter(player);
+  updateFighter(bot);
+  updateShots();
+  updateParticles();
 
- if(messageTimer>0){
-  messageTimer--;
-  if(messageTimer===0)document.getElementById("message").textContent="";
+  if(messageTimer>0){
+   messageTimer--;
+   if(messageTimer===0)$("message").textContent="";
+  }
+
+  draw();
+  animationId=requestAnimationFrame(loop);
+ }catch(error){
+  running=false;
+  showError(error);
  }
- draw();
- requestAnimationFrame(loop);
 }
 
+// Attach buttons after the HTML elements exist.
+$("playButton").addEventListener("click",startGame);
+$("againButton").addEventListener("click",startGame);
+$("endMenuButton").addEventListener("click",showMenu);
+$("resumeButton").addEventListener("click",resumeGame);
+$("restartButton").addEventListener("click",startGame);
+$("pauseMenuButton").addEventListener("click",showMenu);
+$("pauseBtn").addEventListener("click",pauseGame);
+
+window.addEventListener("keydown",e=>{
+ const k=e.key.toLowerCase();
+ keys[k]=true;
+ if([" ","arrowup","arrowdown","arrowleft","arrowright"].includes(k))e.preventDefault();
+
+ if(k==="r"&&(running||ended))startGame();
+ if(k==="escape"&&running&&!paused)pauseGame();
+ else if(k==="escape"&&paused)resumeGame();
+
+ if(k===" "&&!e.repeat&&running&&!paused)jump(player);
+});
+window.addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false;});
+
+canvas.addEventListener("mousemove",e=>{
+ const r=canvas.getBoundingClientRect();
+ mouse.x=e.clientX-r.left;
+ mouse.y=e.clientY-r.top;
+});
+canvas.addEventListener("mousedown",e=>{
+ if(e.button===0)mouse.down=true;
+});
+window.addEventListener("mouseup",e=>{
+ if(e.button===0)mouse.down=false;
+});
+canvas.addEventListener("contextmenu",e=>e.preventDefault());
+
 setArena();
-drawBackground();
-drawArena();
+draw();
 })();
 </script>
 </body>
