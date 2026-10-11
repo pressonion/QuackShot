@@ -3,424 +3,2149 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tactical Strike</title>
+
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111719;color:#f3f5f6;font-family:Arial,sans-serif}
-canvas{display:block}
-button,input{font:inherit}
-button{cursor:pointer;background:#293238;border:1px solid #667177;color:white;padding:11px 15px;border-radius:4px;font-weight:bold}
-button:hover{background:#3a464c}
-button.primary{background:#a9433d;border-color:#df766d}
-input{width:100%;padding:11px;background:#151b1e;color:white;border:1px solid #59646a;border-radius:4px}
-#ui{position:fixed;inset:0;pointer-events:none}
-.panel{pointer-events:auto;background:#151b1ef5;border:1px solid #4b555a;border-radius:6px;padding:23px;box-shadow:0 18px 60px #0009;width:min(450px,94vw)}
-.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
-.hidden{display:none!important}
-h1{margin:0 0 8px;font-size:32px;letter-spacing:3px}
-h2{margin:0 0 12px}
-p{color:#b8c1c5;line-height:1.45}
-.small{font-size:12px;color:#aeb8bd}
-.field{margin:13px 0}
-.field label{display:block;font-size:11px;letter-spacing:1px;margin-bottom:6px;color:#aeb8bd}
-#main{text-align:center}
-#main button{width:100%;margin-top:8px}
-#status{font-size:12px;color:#ffb1a7;min-height:18px;margin-top:10px}
-#lobby{width:min(720px,95vw);max-height:90vh;overflow:auto}
-.lobbyHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
-#code{font-size:24px;letter-spacing:5px;font-weight:900;margin-top:6px}
-.teams{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}
-.team{border:1px solid #4a555a;border-radius:4px;min-height:140px;overflow:hidden}
-.team h3{margin:0;background:#813e39;padding:12px;font-size:13px;letter-spacing:2px}
-.team.blue h3{background:#315d81}
-.players{padding:8px}
-.player{display:flex;justify-content:space-between;align-items:center;gap:7px;padding:7px 3px;border-bottom:1px solid #ffffff16;font-size:12px}
-.player button{font-size:10px;padding:5px}
-.row{display:flex;gap:9px}.row>*{flex:1}
-#hud{display:none;position:absolute;inset:0}
-#top{position:absolute;top:13px;left:50%;transform:translateX(-50%);display:flex;gap:17px;align-items:center;white-space:nowrap;background:#111719e8;border:1px solid #ffffff22;padding:10px 15px;border-radius:4px;font-size:13px}
-.red{color:#ee8b80}.blue{color:#91c5f2}
-#crosshair{position:absolute;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%)}
-#crosshair i{position:absolute;background:#f3f5ec;box-shadow:0 0 2px #000}
-#crosshair .t,#crosshair .b{width:2px;height:5px;left:8px}
-#crosshair .t{top:0}#crosshair .b{bottom:0}
-#crosshair .l,#crosshair .r{height:2px;width:5px;top:8px}
-#crosshair .l{left:0}#crosshair .r{right:0}
-#message{position:absolute;top:24%;left:50%;transform:translateX(-50%);font-size:23px;font-weight:900;letter-spacing:2px;text-shadow:0 3px 9px #000;text-align:center}
-#notice{position:absolute;top:36%;left:50%;transform:translateX(-50%);font-weight:bold;text-shadow:0 2px 5px #000}
-#healthBox{position:absolute;left:22px;bottom:22px;width:210px;background:#111719e8;border:1px solid #ffffff25;padding:12px}
-#healthNum{font-size:19px;font-weight:bold;margin-bottom:7px}
-#healthBar{height:8px;background:#343c40}
-#healthFill{height:100%;width:100%;background:#65bc83}
-#stance{font-size:10px;color:#bbc4c8;margin-top:8px}
-#ammoBox{position:absolute;right:22px;bottom:22px;background:#111719e8;border:1px solid #ffffff25;padding:12px 16px;text-align:right;min-width:155px}
-#ammo{font-size:30px;font-weight:900}
-#ammoBox small{display:block;color:#b7c0c4;letter-spacing:2px;font-size:10px}
-#reloadHint{font-size:11px;color:#f2c27c;margin-top:5px}
-#controls{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:10px;color:#e0e5e4;text-shadow:0 2px 4px #000;white-space:nowrap}
-#sound{position:absolute;right:12px;top:12px;pointer-events:auto;padding:7px 9px;font-size:10px}
-#end{display:none;position:absolute;inset:0;background:#000b;pointer-events:auto;align-items:center;justify-content:center}
-@media(max-width:600px){.teams{grid-template-columns:1fr}#top{top:5px;gap:8px;font-size:10px;padding:8px}#healthBox{left:7px;bottom:7px;width:145px}#ammoBox{right:7px;bottom:7px;min-width:110px;padding:8px}#controls{display:none}}
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #101319;
+    --panel: #191e26;
+    --panel-light: #222934;
+    --border: #343c48;
+    --text: #f0f2f5;
+    --muted: #a3adba;
+    --red: #e45c61;
+    --blue: #5a9ce8;
+    --green: #77c99b;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+button, input {
+    font: inherit;
+}
+
+button {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: #303844;
+    color: white;
+    padding: 11px 15px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+
+button:hover {
+    background: #414b59;
+    border-color: #687486;
+}
+
+button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 12px;
+    background: #10141a;
+    color: white;
+    outline: none;
+}
+
+input:focus {
+    border-color: #7a8ba2;
+}
+
+.primary {
+    background: #416f9f;
+    border-color: #5688ba;
+}
+
+.primary:hover {
+    background: #4d82b8;
+}
+
+.danger {
+    background: #7b373b;
+    border-color: #a54b51;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#gameCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 0;
+}
+
+.screen {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(9, 12, 17, .92);
+    overflow-y: auto;
+}
+
+.panel {
+    width: min(460px, 100%);
+    padding: 28px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--panel);
+    box-shadow: 0 18px 65px rgba(0,0,0,.35);
+}
+
+.panel.wide {
+    width: min(760px, 100%);
+}
+
+.logo {
+    margin: 0;
+    font-size: clamp(28px, 5vw, 43px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-align: center;
+}
+
+.subtitle {
+    margin: 9px 0 25px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.5;
+}
+
+.field-label {
+    display: block;
+    margin: 16px 0 7px;
+    color: #cbd2dc;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.button-stack {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.form-error {
+    min-height: 18px;
+    margin-top: 12px;
+    color: #ff8585;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.small-note {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.top-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.top-line h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.room-code {
+    padding: 9px 13px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: #10141a;
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 3px;
+}
+
+.lobby-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.team-column {
+    min-width: 0;
+    padding: 13px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #141920;
+}
+
+.team-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.team-heading.red {
+    color: var(--red);
+}
+
+.team-heading.blue {
+    color: var(--blue);
+}
+
+.team-list {
+    min-height: 90px;
+    display: grid;
+    align-content: start;
+    gap: 7px;
+}
+
+.player-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    padding: 9px;
+    border-radius: 4px;
+    background: #222934;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.player-row .host-label {
+    color: #e3c17c;
+    font-size: 10px;
+    margin-left: 5px;
+}
+
+.player-row button {
+    padding: 5px 7px;
+    font-size: 10px;
+}
+
+.lobby-footer {
+    display: flex;
+    gap: 9px;
+    margin-top: 18px;
+}
+
+.lobby-footer button {
+    flex: 1;
+}
+
+#lobbyStatus {
+    min-height: 20px;
+    margin-top: 12px;
+    color: var(--muted);
+    text-align: center;
+    font-size: 12px;
+}
+
+#hud {
+    position: fixed;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.hud-top {
+    position: absolute;
+    top: 17px;
+    left: 17px;
+    right: 17px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.hud-card {
+    min-width: 130px;
+    padding: 11px 13px;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 5px;
+    background: rgba(15,19,25,.83);
+    backdrop-filter: blur(4px);
+}
+
+.hud-label {
+    color: #aeb8c5;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.hud-value {
+    margin-top: 5px;
+    font-size: 20px;
+    font-weight: 900;
+}
+
+#roundDisplay {
+    text-align: center;
+}
+
+#roundDisplay .hud-value {
+    font-size: 16px;
+}
+
+.health-bar {
+    width: 170px;
+    height: 7px;
+    margin-top: 8px;
+    border-radius: 5px;
+    background: #444950;
+    overflow: hidden;
+}
+
+#healthFill {
+    width: 100%;
+    height: 100%;
+    background: var(--green);
+    transition: width .15s;
+}
+
+.hud-bottom {
+    position: absolute;
+    left: 18px;
+    bottom: 18px;
+    display: flex;
+    gap: 10px;
+}
+
+.hud-bottom .hud-card {
+    min-width: 110px;
+}
+
+#ammoValue {
+    font-size: 25px;
+}
+
+#reloadHint {
+    margin-top: 4px;
+    color: #e8c982;
+    font-size: 11px;
+}
+
+#crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 22px;
+    height: 22px;
+    transform: translate(-50%, -50%);
+}
+
+.cross-line {
+    position: absolute;
+    background: rgba(245,248,250,.95);
+    box-shadow: 0 0 2px #111;
+}
+
+.cross-top, .cross-bottom {
+    left: 10px;
+    width: 2px;
+    height: 6px;
+}
+
+.cross-top {
+    top: 0;
+}
+
+.cross-bottom {
+    bottom: 0;
+}
+
+.cross-left, .cross-right {
+    top: 10px;
+    width: 6px;
+    height: 2px;
+}
+
+.cross-left {
+    left: 0;
+}
+
+.cross-right {
+    right: 0;
+}
+
+#hitMarker {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 31px;
+    font-weight: bold;
+    opacity: 0;
+    text-shadow: 0 0 4px black;
+}
+
+#hitText {
+    position: absolute;
+    top: calc(50% + 27px);
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    opacity: 0;
+    text-shadow: 0 1px 3px black;
+    white-space: nowrap;
+}
+
+#message {
+    position: absolute;
+    top: 24%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 9px 16px;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 5px;
+    background: rgba(12,16,22,.8);
+    font-size: 15px;
+    font-weight: bold;
+    text-align: center;
+    opacity: 0;
+    transition: opacity .2s;
+    white-space: nowrap;
+}
+
+#soundButton {
+    position: absolute;
+    right: 17px;
+    bottom: 17px;
+    z-index: 5;
+    pointer-events: auto;
+    padding: 8px 10px;
+    background: rgba(15,19,25,.85);
+}
+
+#endScreen {
+    z-index: 8;
+    background: rgba(7,10,14,.88);
+}
+
+.end-panel {
+    width: min(420px, 100%);
+    padding: 30px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    text-align: center;
+}
+
+.end-panel h2 {
+    font-size: 30px;
+    margin: 0 0 12px;
+}
+
+.end-panel p {
+    color: var(--muted);
+    line-height: 1.5;
+}
+
+#connectionStatus {
+    position: fixed;
+    z-index: 30;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    padding: 7px 11px;
+    border-radius: 4px;
+    background: rgba(12,16,22,.92);
+    color: #e7c97d;
+    font-size: 11px;
+    pointer-events: none;
+}
+
+#connectionStatus.good {
+    color: var(--green);
+}
+
+#connectionStatus.bad {
+    color: #ff8989;
+}
+
+@media (max-width: 560px) {
+    .panel {
+        padding: 19px;
+    }
+
+    .lobby-columns {
+        gap: 8px;
+    }
+
+    .team-column {
+        padding: 8px;
+    }
+
+    .hud-card {
+        min-width: 95px;
+        padding: 8px;
+    }
+
+    .health-bar {
+        width: 115px;
+    }
+
+    .hud-value {
+        font-size: 17px;
+    }
+
+    .hud-top {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+    }
+
+    .hud-bottom {
+        left: 8px;
+        bottom: 8px;
+    }
+}
 </style>
 </head>
+
 <body>
-<div id="ui">
-<button id="sound">SOUND: ON</button>
-<div id="main" class="panel center">
-<h1>TACTICAL STRIKE</h1><p>Team-based tactical FPS</p>
-<div class="field"><label>CALLSIGN</label><input id="name" maxlength="16" value="Player"></div>
-<button id="create" class="primary">CREATE LOBBY</button>
-<div class="field"><label>ENTER 5-CHARACTER ROOM CODE</label><input id="joinCode" maxlength="5" placeholder="ABCDE" style="text-align:center;text-transform:uppercase;letter-spacing:5px"></div>
-<button id="join">JOIN LOBBY</button>
-<div id="status"></div>
-<p class="small">WASD move · Mouse aim · Left click fire · R reload · Shift crouch</p>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="mainMenu" class="screen">
+    <div class="panel">
+        <h1 class="logo">TACTICAL STRIKE</h1>
+        <p class="subtitle">Team-based multiplayer combat.<br>Create a room or join your friends.</p>
+
+        <label class="field-label" for="playerName">PLAYER NAME</label>
+        <input id="playerName" maxlength="18" placeholder="Enter your name" autocomplete="nickname">
+
+        <div class="button-stack">
+            <button id="createButton" class="primary">Create Room</button>
+        </div>
+
+        <label class="field-label" for="roomInput">ROOM CODE</label>
+        <input id="roomInput" maxlength="5" placeholder="Enter 5-character code" autocomplete="off">
+
+        <div class="button-stack">
+            <button id="joinButton">Join Room</button>
+        </div>
+
+        <div id="menuError" class="form-error"></div>
+        <p class="small-note">The room creator becomes the host and can move players between teams and start the match.</p>
+    </div>
 </div>
 
-<div id="lobby" class="panel center hidden">
-<div class="lobbyHead"><div><div class="small">ROOM CODE · SHARE WITH FRIENDS</div><div id="code">-----</div></div><button id="copy">COPY</button></div>
-<p>Choose teams, then the host can start the match.</p>
-<div class="teams">
-<div class="team"><h3>RED TEAM <span id="rc">0/5</span></h3><div id="reds" class="players"></div></div>
-<div class="team blue"><h3>BLUE TEAM <span id="bc">0/5</span></h3><div id="blues" class="players"></div></div>
-</div>
-<div class="row"><button id="leave">LEAVE</button><button id="start" class="primary">START MATCH</button></div>
-<div id="lobbyStatus" class="small" style="margin-top:12px"></div>
+<div id="lobbyScreen" class="screen hidden">
+    <div class="panel wide">
+        <div class="top-line">
+            <div>
+                <h2>Match Lobby</h2>
+                <div class="small-note">Waiting for the host to start the match</div>
+            </div>
+            <div>
+                <div class="small-note" style="margin-bottom:5px;text-align:center">ROOM CODE</div>
+                <div class="room-code" id="roomCodeDisplay">-----</div>
+            </div>
+        </div>
+
+        <div class="lobby-columns">
+            <div class="team-column">
+                <div class="team-heading red">
+                    <span>RED TEAM</span>
+                    <span id="redCount">0 / 5</span>
+                </div>
+                <div id="redPlayers" class="team-list"></div>
+                <button id="joinRedButton" style="width:100%;margin-top:12px">Join Red</button>
+            </div>
+
+            <div class="team-column">
+                <div class="team-heading blue">
+                    <span>BLUE TEAM</span>
+                    <span id="blueCount">0 / 5</span>
+                </div>
+                <div id="bluePlayers" class="team-list"></div>
+                <button id="joinBlueButton" style="width:100%;margin-top:12px">Join Blue</button>
+            </div>
+        </div>
+
+        <div class="lobby-footer">
+            <button id="leaveButton">Leave Room</button>
+            <button id="startButton" class="primary">Start Match</button>
+        </div>
+
+        <div id="lobbyStatus">Waiting for players...</div>
+    </div>
 </div>
 
-<div id="hud">
-<div id="top"><b id="round">ROUND 1</b><span class="red">RED <b id="rs">0</b></span><span class="blue">BLUE <b id="bs">0</b></span><b id="phase">LIVE</b></div>
-<div id="crosshair"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i></div>
-<div id="message"></div><div id="notice"></div>
-<div id="healthBox"><div class="small">HEALTH</div><div id="healthNum">100 HP</div><div id="healthBar"><div id="healthFill"></div></div><div id="stance">STANDING</div></div>
-<div id="ammoBox"><div id="ammo">20 / 20</div><small>AK-47 · 7.62 MM</small><div id="reloadHint"></div></div>
-<div id="controls">WASD MOVE · MOUSE AIM · LMB FIRE · R RELOAD · SHIFT CROUCH · ESC UNLOCK</div>
+<div id="hud" class="hidden">
+    <div class="hud-top">
+        <div class="hud-card">
+            <div class="hud-label">Health</div>
+            <div class="hud-value"><span id="healthValue">100</span> HP</div>
+            <div class="health-bar"><div id="healthFill"></div></div>
+        </div>
+
+        <div class="hud-card" id="roundDisplay">
+            <div class="hud-label">Tactical Strike</div>
+            <div class="hud-value" id="roundValue">ROUND 1</div>
+            <div class="small-note" id="scoreValue">RED 0 - 0 BLUE</div>
+        </div>
+
+        <div class="hud-card">
+            <div class="hud-label">Team</div>
+            <div class="hud-value" id="teamValue">RED</div>
+            <div class="small-note" id="aliveValue">ALIVE</div>
+        </div>
+    </div>
+
+    <div id="crosshair">
+        <div class="cross-line cross-top"></div>
+        <div class="cross-line cross-bottom"></div>
+        <div class="cross-line cross-left"></div>
+        <div class="cross-line cross-right"></div>
+    </div>
+
+    <div id="hitMarker">×</div>
+    <div id="hitText"></div>
+    <div id="message"></div>
+
+    <div class="hud-bottom">
+        <div class="hud-card">
+            <div class="hud-label">AK Rifle</div>
+            <div class="hud-value" id="ammoValue">20 / 20</div>
+            <div id="reloadHint">LMB: Fire · R: Reload</div>
+        </div>
+        <div class="hud-card">
+            <div class="hud-label">Controls</div>
+            <div class="small-note">WASD: Move</div>
+            <div class="small-note">Mouse: Aim</div>
+            <div class="small-note">Shift: Crouch</div>
+            <div class="small-note">Esc: Release mouse</div>
+        </div>
+    </div>
 </div>
-<div id="end"><div class="panel" style="text-align:center"><h1 id="endTitle">MATCH OVER</h1><p id="endText"></p><button id="return">RETURN TO LOBBY</button></div></div>
+
+<button id="soundButton" class="hidden">Sound: ON</button>
+
+<div id="endScreen" class="screen hidden">
+    <div class="end-panel">
+        <h2 id="endTitle">Match Over</h2>
+        <p id="endDescription">The match has ended.</p>
+        <button id="returnLobbyButton" class="primary" style="width:100%">Return to Lobby</button>
+    </div>
 </div>
+
+<div id="connectionStatus">Connecting to server...</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
 <script>
 (() => {
 "use strict";
-const socket=io(),$=id=>document.getElementById(id);
-let scene,camera,renderer,clock,weapon,muzzle,worldReady=false;
-let myId=null,hostId=null,roomCode=null,state=null,mouseLocked=false;
-let yaw=0,pitch=0,health=100,ammo=20,alive=true,crouched=false,reloading=false;
-let reloadAt=0,lastShot=0,recoil=0,firing=false,soundOn=true,audio=null,lastStep=0;
-let pos={x:-18,z:0},keys={w:false,a:false,s:false,d:false};
-const remotes=new Map(),tracers=[],effects=[];
-const blocks=[
- {x:0,z:-24,w:50,d:1,h:7},{x:0,z:24,w:50,d:1,h:7},
- {x:-24,z:0,w:1,d:50,h:7},{x:24,z:0,w:1,d:50,h:7},
- {x:-9,z:-13,w:8,d:10,h:7},{x:-9,z:13,w:8,d:10,h:7},
- {x:9,z:-13,w:8,d:10,h:7},{x:9,z:13,w:8,d:10,h:7},
- {x:-19,z:-19,w:5,d:5,h:11},{x:19,z:-19,w:5,d:5,h:11},
- {x:-19,z:19,w:5,d:5,h:11},{x:19,z:19,w:5,d:5,h:11},
- {x:-3.8,z:-5.5,w:1.2,d:5,h:2.3},{x:3.8,z:5.5,w:1.2,d:5,h:2.3},
- {x:-3.8,z:5.5,w:1.2,d:5,h:2.3},{x:3.8,z:-5.5,w:1.2,d:5,h:2.3},
- {x:-15,z:-6,w:4.5,d:1.1,h:2.5},{x:15,z:6,w:4.5,d:1.1,h:2.5},
- {x:-15,z:6,w:4.5,d:1.1,h:2.5},{x:15,z:-6,w:4.5,d:1.1,h:2.5},
- {x:0,z:-2.7,w:5.8,d:1,h:1.35},{x:0,z:2.7,w:5.8,d:1,h:1.35},
- // A segmented central divider blocks a direct spawn-to-spawn shot.
- {x:0,z:-18,w:1.4,d:10,h:4.4},{x:0,z:18,w:1.4,d:10,h:4.4}
+
+/* -------------------------------------------------------
+   CONNECTION AND GAME STATE
+------------------------------------------------------- */
+
+const socket = io();
+
+const $ = id => document.getElementById(id);
+
+const mainMenu = $("mainMenu");
+const lobbyScreen = $("lobbyScreen");
+const hud = $("hud");
+const endScreen = $("endScreen");
+const connectionStatus = $("connectionStatus");
+
+let state = null;
+let myId = null;
+let myPlayer = null;
+let roomCode = "";
+let isHost = false;
+
+let scene, camera, renderer, clock;
+let weapon, muzzleFlash;
+let remotePlayers = new Map();
+let mapObjects = [];
+let tracerObjects = [];
+
+let pos = new THREE.Vector3(0, 0, 0);
+let yaw = 0;
+let pitch = 0;
+
+let health = 100;
+let ammo = 20;
+let maxAmmo = 20;
+let alive = true;
+let crouched = false;
+let firing = false;
+let reloading = false;
+let mouseLocked = false;
+let soundEnabled = true;
+
+let fireCooldown = 0;
+let recoil = 0;
+let reloadStarted = 0;
+let reloadDuration = 1600;
+let lastStateSend = 0;
+let lastAppliedRound = -1;
+let lastAppliedPhase = "";
+let lastMessageAt = 0;
+let lastHitAt = 0;
+let lastHitTextAt = 0;
+
+const keys = Object.create(null);
+const raycaster = new THREE.Raycaster();
+const tempDirection = new THREE.Vector3();
+
+let audioContext = null;
+
+/* -------------------------------------------------------
+   THREE.JS INITIALIZATION
+------------------------------------------------------- */
+
+function initThree() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x10151c);
+    scene.fog = new THREE.Fog(0x10151c, 40, 105);
+
+    camera = new THREE.PerspectiveCamera(
+        76,
+        window.innerWidth / window.innerHeight,
+        0.05,
+        180
+    );
+    camera.rotation.order = "YXZ";
+
+    renderer = new THREE.WebGLRenderer({
+        canvas: $("gameCanvas"),
+        antialias: true,
+        powerPreference: "high-performance"
+    });
+
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = false;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    clock = new THREE.Clock();
+
+    const hemi = new THREE.HemisphereLight(0xc8d7e8, 0x34302a, 2.0);
+    scene.add(hemi);
+
+    const mainLight = new THREE.DirectionalLight(0xffffff, 2.1);
+    mainLight.position.set(10, 25, 8);
+    scene.add(mainLight);
+
+    makeMap();
+    makeWeapon();
+
+    window.addEventListener("resize", onResize);
+    animate();
+}
+
+function onResize() {
+    if (!camera || !renderer) return;
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+/* -------------------------------------------------------
+   MAP
+   Keep this list aligned with WALLS in server.js.
+------------------------------------------------------- */
+
+const blocks = [
+    {x:0,z:-24,w:50,d:1,h:7},
+    {x:0,z:24,w:50,d:1,h:7},
+    {x:-24,z:0,w:1,d:50,h:7},
+    {x:24,z:0,w:1,d:50,h:7},
+
+    {x:-9,z:-13,w:8,d:10,h:7},
+    {x:-9,z:13,w:8,d:10,h:7},
+    {x:9,z:-13,w:8,d:10,h:7},
+    {x:9,z:13,w:8,d:10,h:7},
+
+    {x:-19,z:-19,w:5,d:5,h:11},
+    {x:19,z:-19,w:5,d:5,h:11},
+    {x:-19,z:19,w:5,d:5,h:11},
+    {x:19,z:19,w:5,d:5,h:11},
+
+    {x:-3.8,z:-5.5,w:1.2,d:5,h:2.3},
+    {x:3.8,z:5.5,w:1.2,d:5,h:2.3},
+    {x:-3.8,z:5.5,w:1.2,d:5,h:2.3},
+    {x:3.8,z:-5.5,w:1.2,d:5,h:2.3},
+
+    {x:-15,z:-6,w:4.5,d:1.1,h:2.5},
+    {x:15,z:6,w:4.5,d:1.1,h:2.5},
+    {x:-15,z:6,w:4.5,d:1.1,h:2.5},
+    {x:15,z:-6,w:4.5,d:1.1,h:2.5},
+
+    {x:0,z:-2.7,w:5.8,d:1,h:1.35},
+    {x:0,z:2.7,w:5.8,d:1,h:1.35},
+    {x:0,z:0,w:1.4,d:5.5,h:4.4},
+
+    {x:0,z:-18,w:1.4,d:10,h:4.4},
+    {x:0,z:18,w:1.4,d:10,h:4.4}
 ];
-const $status=t=>{$("status").textContent=t||"";};
-function panel(which){
- $("main").classList.toggle("hidden",which!=="main");
- $("lobby").classList.toggle("hidden",which!=="lobby");
- $("hud").style.display=which==="game"?"block":"none";
- if(which!=="game")document.exitPointerLock?.();
+
+function material(color, roughness = 0.9, metalness = 0.02) {
+    return new THREE.MeshStandardMaterial({
+        color,
+        roughness,
+        metalness
+    });
 }
-function initAudio(){
- if(!audio){const A=window.AudioContext||window.webkitAudioContext;if(A)audio=new A();}
- if(audio?.state==="suspended")audio.resume();
+
+function addBox(x, y, z, w, h, d, mat, parent = scene) {
+    const mesh = new THREE.Mesh(
+        new THREE.BoxGeometry(w, h, d),
+        mat
+    );
+
+    mesh.position.set(x, y, z);
+    mesh.castShadow = false;
+    mesh.receiveShadow = false;
+    parent.add(mesh);
+
+    return mesh;
 }
-function tone(f,d,type="sine",v=.04,slide=0){
- if(!soundOn)return;initAudio();if(!audio)return;
- const o=audio.createOscillator(),g=audio.createGain(),t=audio.currentTime;
- o.type=type;o.frequency.setValueAtTime(f,t);
- if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(20,f+slide),t+d);
- g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);
- o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+d);
-}
-function noise(d=.08,v=.08,cut=1800){
- if(!soundOn)return;initAudio();if(!audio)return;
- const n=Math.floor(audio.sampleRate*d),b=audio.createBuffer(1,n,audio.sampleRate),a=b.getChannelData(0);
- for(let i=0;i<n;i++)a[i]=(Math.random()*2-1)*(1-i/n);
- const s=audio.createBufferSource(),f=audio.createBiquadFilter(),g=audio.createGain();
- s.buffer=b;f.type="lowpass";f.frequency.value=cut;g.gain.value=v;
- s.connect(f);f.connect(g);g.connect(audio.destination);s.start();
-}
-function gunSound(){noise(.09,.16,2400);tone(95,.1,"sawtooth",.08,-50);tone(800,.035,"square",.02,-400);}
-function reloadSound(){tone(420,.07,"square",.03,-150);setTimeout(()=>noise(.09,.04,800),250);setTimeout(()=>tone(240,.09,"square",.035,140),900);setTimeout(()=>tone(500,.07,"square",.025,-180),1250);}
-function hitSound(){tone(700,.06,"sine",.05,-250);}
-function stepSound(){noise(.05,.015,350);}
-function msg(t,ms=1500){$("message").textContent=t;clearTimeout(msg.timer);msg.timer=setTimeout(()=>$("message").textContent="",ms);}
-function material(c,r=.85,m=0){return new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});}
-function cube(w,h,d,mat,x,y,z,shadows=true){
- const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);o.position.set(x,y,z);o.castShadow=shadows;o.receiveShadow=true;scene.add(o);return o;
-}
-function makeMap(){
- cube(50,.5,50,material(0x85877e),0,-.28,0,false);
- const road=material(0x555d5d),cap=material(0x656f70),roof=material(0x424b4d),paint=material(0xbeb9a4);
- cube(7,.025,47,road,0,-.015,0,false);cube(47,.025,7,road,0,-.005,0,false);
- cube(9,.04,9,material(0x929388),0,.005,0,false);
- for(let z=-20;z<=20;z+=4)cube(.08,.03,1.5,paint,0,.02,z,false);
- for(let x=-20;x<=20;x+=4)cube(1.5,.03,.08,paint,x,.02,0,false);
- for(const b of blocks){
-  let m=b.h>=7?material(b.h>=10?0x727a7b:0x96988e):material(0x898a80);
-  cube(b.w,b.h,b.d,m,b.x,b.h/2,b.z);
-  if(b.h>=7){
-   cube(b.w+.25,.25,b.d+.25,cap,b.x,b.h+.12,b.z);
-   if(b.h>=10){
-    cube(b.w+.4,.35,b.d+.4,roof,b.x,b.h+.35,b.z);
-    for(const s of [-1,1]){
-     cube(.08,1.3,.07,roof,b.x+s*(b.w/2+.03),b.h*.65,b.z);
-     cube(.07,1.3,.08,roof,b.x,b.h*.65,b.z+s*(b.d/2+.03));
+
+function makeMap() {
+    const floorMat = material(0x353c43);
+    const wallMat = material(0x525a61);
+    const concreteMat = material(0x626970);
+    const darkMat = material(0x272d33);
+    const lineMat = new THREE.MeshBasicMaterial({
+        color: 0x777f86,
+        transparent: true,
+        opacity: 0.22
+    });
+
+    addBox(0, -0.35, 0, 49, 0.7, 49, floorMat);
+
+    for (let i = -22; i <= 22; i += 2) {
+        const line1 = addBox(i, 0.006, 0, 0.025, 0.012, 46, lineMat);
+        const line2 = addBox(0, 0.007, i, 46, 0.012, 0.025, lineMat);
+        mapObjects.push(line1, line2);
     }
-   }
-  }else cube(b.w+.1,.1,b.d+.1,cap,b.x,b.h+.05,b.z);
- }
- // Clearly marked team deployment areas.
- cube(4,.04,1,material(0x9c5149),-18,.03,0,false);
- cube(4,.04,1,material(0x4f79a0),18,.03,0,false);
+
+    for (const b of blocks) {
+        const mat = b.h >= 6 ? wallMat : concreteMat;
+        const body = addBox(b.x, b.h / 2, b.z, b.w, b.h, b.d, mat);
+
+        body.userData.isWall = true;
+        mapObjects.push(body);
+
+        const cap = addBox(
+            b.x,
+            b.h + 0.035,
+            b.z,
+            b.w + 0.04,
+            0.07,
+            b.d + 0.04,
+            darkMat
+        );
+
+        mapObjects.push(cap);
+    }
+
+    // Low-contrast floor markings.
+    const stripeMat = new THREE.MeshBasicMaterial({
+        color: 0xb8c1c9,
+        transparent: true,
+        opacity: 0.25
+    });
+
+    addBox(-17, 0.015, 0, 0.1, 0.02, 15, stripeMat);
+    addBox(17, 0.015, 0, 0.1, 0.02, 15, stripeMat);
 }
-function makeWeapon(){
- weapon=new THREE.Group();
- const steel=material(0x252b2c,.4,.6),light=material(0x4a5050,.4,.5),black=material(0x131718,.5,.3);
- const wood=material(0x795238,.75),wood2=material(0x946642,.75),glove=material(0x29302c);
- function part(w,h,d,m,x,y,z,rz=0){
-  const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);
-  o.position.set(x,y,z);o.rotation.z=rz;o.castShadow=true;weapon.add(o);return o;
- }
- // The gun is intentionally oversized enough to remain visible at normal resolutions.
- part(.19,.21,.48,steel,0,0,0);
- part(.2,.07,.31,light,0,.115,0);
- part(.13,.1,.22,black,0,-.11,.04);
- part(.13,.14,.47,wood,0,.015,.43,-.1);
- part(.14,.055,.13,black,0,-.005,.66,-.1);
- part(.17,.11,.4,wood2,0,.035,-.4);
- part(.07,.07,.55,steel,0,.05,-.83);
- part(.1,.09,.13,black,0,.05,-1.14);
- part(.13,.1,.06,light,0,.05,-1.22);
- part(.04,.12,.05,black,0,.14,-.94);
- part(.045,.09,.05,black,0,.16,-.15);
- part(.14,.29,.17,steel,0,-.24,-.015,.16);
- part(.13,.21,.13,black,0,-.37,0,.16);
- part(.1,.2,.13,wood,0,-.2,.16,.22);
- part(.04,.045,.14,light,.105,.025,.025);
- part(.2,.17,.25,glove,-.23,-.17,-.32,.08);
- part(.15,.12,.2,black,-.17,-.14,-.44);
- part(.2,.17,.24,glove,.21,-.17,-.04,-.1);
- part(.15,.12,.19,black,.17,-.12,-.28);
- weapon.position.set(.37,-.34,-.66);
- weapon.rotation.set(-.03,-.035,0);
- camera.add(weapon);
- const flash=new THREE.Mesh(new THREE.ConeGeometry(.09,.3,8),new THREE.MeshBasicMaterial({color:0xffc46b}));
- flash.rotation.x=-Math.PI/2;flash.position.set(0,.05,-1.36);flash.visible=false;weapon.add(flash);
- weapon.userData.flash=flash;
- muzzle=new THREE.PointLight(0xffa25c,0,3);camera.add(muzzle);
+
+/* -------------------------------------------------------
+   PLAYER WEAPON
+------------------------------------------------------- */
+
+function makeWeapon() {
+    weapon = new THREE.Group();
+
+    const metal = new THREE.MeshStandardMaterial({
+        color: 0x252a30,
+        roughness: 0.48,
+        metalness: 0.58
+    });
+
+    const darkMetal = new THREE.MeshStandardMaterial({
+        color: 0x111519,
+        roughness: 0.58,
+        metalness: 0.5
+    });
+
+    const polymer = new THREE.MeshStandardMaterial({
+        color: 0x353a35,
+        roughness: 0.92
+    });
+
+    const wood = new THREE.MeshStandardMaterial({
+        color: 0x4b3828,
+        roughness: 0.92
+    });
+
+    function gunPart(x, y, z, w, h, d, mat, parent = weapon) {
+        const mesh = new THREE.Mesh(
+            new THREE.BoxGeometry(w, h, d),
+            mat
+        );
+        mesh.position.set(x, y, z);
+        parent.add(mesh);
+        return mesh;
+    }
+
+    // The weapon points down the camera's -Z axis.
+    // Thin proportions prevent the rifle from filling the screen.
+    gunPart(0, 0, -0.20, 0.15, 0.15, 0.48, metal);
+    gunPart(0, 0.045, -0.20, 0.115, 0.055, 0.42, darkMetal);
+
+    // Receiver details.
+    gunPart(0, -0.015, -0.03, 0.17, 0.13, 0.22, metal);
+    gunPart(0, -0.065, -0.03, 0.14, 0.045, 0.16, darkMetal);
+
+    // Barrel and muzzle.
+    gunPart(0, 0.025, -0.56, 0.045, 0.045, 0.32, darkMetal);
+    gunPart(0, 0.025, -0.73, 0.065, 0.06, 0.09, metal);
+    gunPart(0, 0.025, -0.785, 0.055, 0.055, 0.045, darkMetal);
+
+    // Upper cover.
+    gunPart(0, 0.092, -0.15, 0.13, 0.035, 0.37, metal);
+
+    // Magazine: narrow, slightly angled.
+    const mag = gunPart(0, -0.17, -0.17, 0.095, 0.24, 0.12, darkMetal);
+    mag.rotation.x = -0.13;
+    mag.rotation.z = -0.045;
+
+    // Handguard.
+    gunPart(0, -0.005, -0.37, 0.115, 0.085, 0.23, wood);
+
+    // Pistol grip.
+    const grip = gunPart(0, -0.13, 0.005, 0.075, 0.17, 0.09, polymer);
+    grip.rotation.x = -0.22;
+
+    // Stock extending behind the receiver.
+    gunPart(0, -0.005, 0.16, 0.105, 0.09, 0.23, wood);
+    gunPart(0, 0.015, 0.255, 0.12, 0.115, 0.045, polymer);
+
+    // Sights.
+    gunPart(0, 0.125, -0.04, 0.025, 0.04, 0.035, darkMetal);
+    gunPart(0, 0.09, -0.54, 0.035, 0.025, 0.035, darkMetal);
+
+    // Small side details.
+    gunPart(0.086, 0.015, -0.12, 0.018, 0.035, 0.11, darkMetal);
+    gunPart(-0.086, 0.015, -0.12, 0.018, 0.035, 0.11, darkMetal);
+
+    // Slim the overall model while retaining the silhouette.
+    weapon.scale.set(0.78, 0.78, 0.88);
+    weapon.position.set(0.34, -0.30, -0.59);
+    weapon.rotation.set(0.01, -0.015, 0.005);
+
+    camera.add(weapon);
+    scene.add(camera);
+
+    muzzleFlash = new THREE.Mesh(
+        new THREE.SphereGeometry(0.055, 8, 8),
+        new THREE.MeshBasicMaterial({
+            color: 0xffd28a,
+            transparent: true,
+            opacity: 0.95
+        })
+    );
+
+    muzzleFlash.position.set(0, 0.02, -0.84);
+    muzzleFlash.visible = false;
+    weapon.add(muzzleFlash);
 }
-function init(){
- if(worldReady)return;
- scene=new THREE.Scene();scene.background=new THREE.Color(0x89969a);scene.fog=new THREE.Fog(0x89969a,48,100);
- camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,180);
- // CRITICAL: the camera must be in the scene for its attached AK-47 to render.
- scene.add(camera);
- renderer=new THREE.WebGLRenderer({antialias:true});
- renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.setSize(innerWidth,innerHeight);
- renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
- renderer.outputColorSpace=THREE.SRGBColorSpace;
- document.body.insertBefore(renderer.domElement,document.body.firstChild);
- clock=new THREE.Clock();
- scene.add(new THREE.HemisphereLight(0xe0e8ec,0x49463f,2));
- const sun=new THREE.DirectionalLight(0xffefd8,2);sun.position.set(-15,28,8);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
- makeMap();makeWeapon();worldReady=true;animate();
+
+/* -------------------------------------------------------
+   REMOTE PLAYER MODELS
+------------------------------------------------------- */
+
+function makeRemote(p) {
+    const group = new THREE.Group();
+
+    const isRed = p.team === "red";
+    const teamColor = isRed ? 0xa84b4d : 0x477bb3;
+    const clothing = new THREE.MeshStandardMaterial({
+        color: teamColor,
+        roughness: 0.94
+    });
+    const pants = material(0x303740);
+    const boots = material(0x181b20);
+    const skin = material(0xc49c7b);
+    const helmet = material(isRed ? 0x6c3033 : 0x294b6c);
+
+    // Torso.
+    const torso = new THREE.Mesh(
+        new THREE.BoxGeometry(0.62, 0.72, 0.34),
+        clothing
+    );
+    torso.position.y = 1.12;
+    group.add(torso);
+
+    // Vest panel.
+    const vest = new THREE.Mesh(
+        new THREE.BoxGeometry(0.48, 0.43, 0.035),
+        material(0x30363a)
+    );
+    vest.position.set(0, 1.17, -0.184);
+    group.add(vest);
+
+    // Head and helmet.
+    const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.19, 12, 10),
+        skin
+    );
+    head.position.y = 1.72;
+    group.add(head);
+
+    const helmetMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.205, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.62),
+        helmet
+    );
+    helmetMesh.position.y = 1.77;
+    group.add(helmetMesh);
+
+    // Arms.
+    const armGeo = new THREE.BoxGeometry(0.19, 0.55, 0.22);
+    const leftArm = new THREE.Mesh(armGeo, clothing);
+    leftArm.position.set(-0.40, 1.10, -0.02);
+    leftArm.rotation.z = -0.12;
+    group.add(leftArm);
+
+    const rightArm = new THREE.Mesh(armGeo, clothing);
+    rightArm.position.set(0.40, 1.10, -0.13);
+    rightArm.rotation.z = 0.12;
+    group.add(rightArm);
+
+    // Legs.
+    const legGeo = new THREE.BoxGeometry(0.23, 0.68, 0.26);
+
+    const leftLeg = new THREE.Mesh(legGeo, pants);
+    leftLeg.position.set(-0.17, 0.39, 0);
+    group.add(leftLeg);
+
+    const rightLeg = new THREE.Mesh(legGeo, pants);
+    rightLeg.position.set(0.17, 0.39, 0);
+    group.add(rightLeg);
+
+    // Boots.
+    const bootGeo = new THREE.BoxGeometry(0.24, 0.14, 0.36);
+
+    const leftBoot = new THREE.Mesh(bootGeo, boots);
+    leftBoot.position.set(-0.17, 0.08, -0.04);
+    group.add(leftBoot);
+
+    const rightBoot = new THREE.Mesh(bootGeo, boots);
+    rightBoot.position.set(0.17, 0.08, -0.04);
+    group.add(rightBoot);
+
+    // Simplified rifle.
+    const rifle = new THREE.Group();
+    const rifleBody = new THREE.Mesh(
+        new THREE.BoxGeometry(0.11, 0.10, 0.53),
+        material(0x1b2025)
+    );
+    rifleBody.position.z = -0.20;
+    rifle.add(rifleBody);
+
+    const rifleBarrel = new THREE.Mesh(
+        new THREE.BoxGeometry(0.045, 0.045, 0.30),
+        material(0x111519)
+    );
+    rifleBarrel.position.z = -0.59;
+    rifle.add(rifleBarrel);
+
+    rifle.position.set(0.29, 1.10, -0.05);
+    group.add(rifle);
+
+    // Health indicator above the player's head.
+    const barGroup = new THREE.Group();
+
+    const barBack = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.75, 0.075),
+        new THREE.MeshBasicMaterial({ color: 0x222222, side: THREE.DoubleSide })
+    );
+    barGroup.add(barBack);
+
+    const barFill = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.70, 0.045),
+        new THREE.MeshBasicMaterial({ color: 0x77d59b, side: THREE.DoubleSide })
+    );
+    barFill.position.z = 0.005;
+    barGroup.add(barFill);
+
+    barGroup.position.set(0, 2.12, 0);
+    group.add(barGroup);
+
+    group.userData = {
+        torso,
+        head,
+        leftArm,
+        rightArm,
+        leftLeg,
+        rightLeg,
+        rifle,
+        barGroup,
+        barFill,
+        clothing,
+        pants,
+        helmetMesh
+    };
+
+    scene.add(group);
+    return group;
 }
-function makeRemote(p){
- const g=new THREE.Group(),team=material(p.team==="red"?0xa94b44:0x4c78a5),dark=material(0x293033),face=material(0xb38a6b),visor=material(0x1e282a,.35,.3);
- function part(w,h,d,m,x,y,z){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;g.add(o);}
- part(.65,.72,.32,team,0,1.1,0);part(.31,.36,.3,face,0,1.7,0);
- part(.36,.15,.35,dark,0,1.89,0);part(.36,.1,.36,visor,0,1.75,-.03);
- part(.23,.62,.23,team,-.2,.42,0);part(.23,.62,.23,team,.2,.42,0);
- part(.2,.62,.22,team,-.43,1.1,0);part(.2,.62,.22,team,.43,1.1,0);
- part(.13,.34,.13,dark,-.43,.8,-.04);part(.13,.34,.13,dark,.43,.8,-.04);
- return g;
+
+function updateRemote(p, dt) {
+    let group = remotePlayers.get(p.id);
+
+    if (!group) {
+        group = makeRemote(p);
+        remotePlayers.set(p.id, group);
+    }
+
+    group.visible = p.alive !== false;
+
+    if (!group.visible) return;
+
+    const targetX = Number(p.x) || 0;
+    const targetZ = Number(p.z) || 0;
+
+    group.position.x += (targetX - group.position.x) * Math.min(1, dt * 15);
+    group.position.z += (targetZ - group.position.z) * Math.min(1, dt * 15);
+    group.rotation.y = Number(p.yaw) || 0;
+
+    const u = group.userData;
+    const hp = Math.max(0, Math.min(100, Number(p.health ?? 100)));
+
+    u.barFill.scale.x = Math.max(0.001, hp / 100);
+    u.barFill.position.x = -(1 - hp / 100) * 0.35;
+
+    const isCrouched = !!p.crouched;
+
+    u.torso.position.y = isCrouched ? 0.82 : 1.12;
+    u.head.position.y = isCrouched ? 1.24 : 1.72;
+    u.helmetMesh.position.y = isCrouched ? 1.29 : 1.77;
+    u.leftArm.position.y = isCrouched ? 0.82 : 1.10;
+    u.rightArm.position.y = isCrouched ? 0.82 : 1.10;
+    u.leftLeg.position.y = isCrouched ? 0.28 : 0.39;
+    u.rightLeg.position.y = isCrouched ? 0.28 : 0.39;
+    u.rifle.position.y = isCrouched ? 0.82 : 1.10;
+    u.barGroup.position.y = isCrouched ? 1.64 : 2.12;
 }
-function updateRemote(p){
- let o=remotes.get(p.id);
- if(!o){o={group:makeRemote(p)};scene.add(o.group);remotes.set(p.id,o);}
- o.group.position.set(p.x,0,p.z);o.group.rotation.y=p.yaw;o.group.visible=p.alive!==false;
+
+function removeMissingPlayers(players) {
+    const ids = new Set(players.map(p => p.id));
+
+    for (const [id, group] of remotePlayers) {
+        if (!ids.has(id)) {
+            scene.remove(group);
+            disposeObject(group);
+            remotePlayers.delete(id);
+        }
+    }
 }
-function removeMissing(players){
- const ids=new Set(players.map(p=>p.id));
- for(const [id,o] of remotes)if(!ids.has(id)){scene.remove(o.group);remotes.delete(id);}
+
+function disposeObject(obj) {
+    obj.traverse(child => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+            if (Array.isArray(child.material)) {
+                child.material.forEach(m => m.dispose());
+            } else {
+                child.material.dispose();
+            }
+        }
+    });
 }
-function line(from,to,color=0xffe1b0){
- const a=new THREE.Vector3(from.x,from.y,from.z),b=new THREE.Vector3(to.x,to.y,to.z);
- const geo=new THREE.BufferGeometry().setFromPoints([a,b]);
- const obj=new THREE.Line(geo,new THREE.LineBasicMaterial({color,transparent:true,opacity:.9}));
- scene.add(obj);tracers.push({obj,life:.13,max:.13});
+
+/* -------------------------------------------------------
+   TRACERS
+------------------------------------------------------- */
+
+function line(from, to) {
+    const start = new THREE.Vector3(from.x, from.y, from.z);
+    const end = new THREE.Vector3(to.x, to.y, to.z);
+
+    const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+    const mat = new THREE.LineBasicMaterial({
+        color: 0xe8d9a4,
+        transparent: true,
+        opacity: 0.9,
+        depthTest: true
+    });
+
+    const tracer = new THREE.Line(geometry, mat);
+    scene.add(tracer);
+
+    tracerObjects.push({
+        object: tracer,
+        created: performance.now(),
+        lifetime: 950
+    });
 }
-function lobby(state){
- hostId=state.hostId;$("code").textContent=roomCode;
- const players=state.players||[],red=players.filter(p=>p.team==="red"),blue=players.filter(p=>p.team==="blue");
- $("reds").innerHTML="";$("blues").innerHTML="";
- $("rc").textContent=red.length+"/5";$("bc").textContent=blue.length+"/5";
- function add(p,where){
-  const row=document.createElement("div");row.className="player";
-  const name=document.createElement("span");name.textContent=p.name+(p.id===hostId?" ★":"")+(p.id===myId?" (YOU)":"");row.appendChild(name);
-  if(myId===hostId&&p.id!==hostId){
-   const b=document.createElement("button");b.textContent=p.team==="red"?"MOVE BLUE":"MOVE RED";
-   b.onclick=()=>socket.emit("setTeam",{playerId:p.id,team:p.team==="red"?"blue":"red"});row.appendChild(b);
-  }
-  where.appendChild(row);
- }
- red.forEach(p=>add(p,$("reds")));blue.forEach(p=>add(p,$("blues")));
- if(!red.length)$("reds").textContent="Waiting for players…";
- if(!blue.length)$("blues").textContent="Waiting for players…";
- $("start").style.display=myId===hostId?"block":"none";
- $("start").disabled=!red.length||!blue.length;
- $("lobbyStatus").textContent=myId===hostId?"You are host. Move players between teams, then start.":"Waiting for the host to start.";
+
+function updateTracers() {
+    const now = performance.now();
+
+    for (let i = tracerObjects.length - 1; i >= 0; i--) {
+        const t = tracerObjects[i];
+        const age = now - t.created;
+
+        if (age >= t.lifetime) {
+            scene.remove(t.object);
+            t.object.geometry.dispose();
+            t.object.material.dispose();
+            tracerObjects.splice(i, 1);
+        } else {
+            t.object.material.opacity = 0.9 * (1 - age / t.lifetime);
+        }
+    }
 }
-function applyState(s){
- state=s;
- $("round").textContent="ROUND "+s.roundNumber;$("rs").textContent=s.redWins;$("bs").textContent=s.blueWins;
- $("phase").textContent=s.phase==="playing"?"LIVE":s.phase==="between"?"ROUND END":"LOBBY";
- const players=s.players||[],me=players.find(p=>p.id===myId);
- if(me){
-  health=me.health;ammo=me.ammo;alive=me.alive;reloading=me.reloading;
-  $("healthNum").textContent=health+" HP";$("healthFill").style.width=health+"%";
-  $("healthFill").style.background=health<=30?"#df4c43":health<=60?"#dfb65b":"#65bc83";
-  $("ammo").textContent=ammo+" / 20";$("reloadHint").textContent=reloading?"RELOADING…":ammo===0?"PRESS R TO RELOAD":"";
- }
- players.filter(p=>p.id!==myId).forEach(updateRemote);removeMissing(players.filter(p=>p.id!==myId));
- if(s.phase==="lobby"){
-  panel("lobby");lobby(s);
-  if(s.matchWinner){$("end").style.display="flex";$("endTitle").textContent=s.matchWinner.toUpperCase()+" TEAM WINS";$("endText").textContent="First to 12 rounds. Start again from the team lobby.";}
- }else{
-  panel("game");
-  if(s.phase==="between")msg(s.lastRoundWinner?s.lastRoundWinner.toUpperCase()+" ROUND WON":"ROUND DRAW",2300);
- }
+
+/* -------------------------------------------------------
+   SOUND
+------------------------------------------------------- */
+
+function getAudio() {
+    if (!soundEnabled) return null;
+
+    try {
+        if (!audioContext) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) audioContext = new AudioCtx();
+        }
+
+        if (audioContext && audioContext.state === "suspended") {
+            audioContext.resume();
+        }
+
+        return audioContext;
+    } catch (_) {
+        return null;
+    }
 }
-function joined(d){
- roomCode=d.roomCode;myId=d.id;hostId=d.hostId;
- init();const me=d.state.players.find(p=>p.id===myId);
- if(me){pos={x:me.x,z:me.z};yaw=me.yaw;pitch=me.pitch;}
- camera.position.set(pos.x,crouched?1.05:1.7,pos.z);camera.rotation.order="YXZ";camera.rotation.set(pitch,yaw,0);
- $("end").style.display="none";$("status").textContent="";applyState(d.state);
+
+function playSound(type) {
+    const ctx = getAudio();
+    if (!ctx) return;
+
+    const now = ctx.currentTime;
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+
+    if (type === "shot") {
+        oscillator.type = "sawtooth";
+        oscillator.frequency.setValueAtTime(115, now);
+        oscillator.frequency.exponentialRampToValueAtTime(48, now + 0.075);
+        gain.gain.setValueAtTime(0.045, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        oscillator.start(now);
+        oscillator.stop(now + 0.085);
+    } else if (type === "hit") {
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(850, now);
+        oscillator.frequency.exponentialRampToValueAtTime(480, now + 0.06);
+        gain.gain.setValueAtTime(0.07, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        oscillator.start(now);
+        oscillator.stop(now + 0.09);
+    } else if (type === "reload") {
+        oscillator.type = "triangle";
+        oscillator.frequency.setValueAtTime(240, now);
+        oscillator.frequency.setValueAtTime(175, now + 0.11);
+        gain.gain.setValueAtTime(0.035, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        oscillator.start(now);
+        oscillator.stop(now + 0.19);
+    } else if (type === "damage") {
+        oscillator.type = "square";
+        oscillator.frequency.setValueAtTime(105, now);
+        oscillator.frequency.exponentialRampToValueAtTime(65, now + 0.14);
+        gain.gain.setValueAtTime(0.035, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        oscillator.start(now);
+        oscillator.stop(now + 0.16);
+    }
 }
-function blocked(x,z,r=.4){
- return blocks.some(b=>x+r>b.x-b.w/2&&x-r<b.x+b.w/2&&z+r>b.z-b.d/2&&z-r<b.z+b.d/2);
+
+/* -------------------------------------------------------
+   UI HELPERS
+------------------------------------------------------- */
+
+function showMessage(text, duration = 1800) {
+    const el = $("message");
+    el.textContent = text;
+    el.style.opacity = "1";
+    lastMessageAt = performance.now();
+
+    window.clearTimeout(showMessage.timer);
+    showMessage.timer = window.setTimeout(() => {
+        el.style.opacity = "0";
+    }, duration);
 }
-function updatePlayer(dt){
- if(!state||state.phase!=="playing"||!alive)return;
- const speed=crouched?2.05:4.2;
- let f=(keys.w?1:0)-(keys.s?1:0),side=(keys.d?1:0)-(keys.a?1:0),n=Math.hypot(f,side)||1;f/=n;side/=n;
- const dx=(-Math.sin(yaw)*f+Math.cos(yaw)*side)*speed*dt;
- const dz=(-Math.cos(yaw)*f-Math.sin(yaw)*side)*speed*dt;
- const nx=Math.max(-22.5,Math.min(22.5,pos.x+dx)),nz=Math.max(-22.5,Math.min(22.5,pos.z+dz));
- if(!blocked(nx,pos.z))pos.x=nx;if(!blocked(pos.x,nz))pos.z=nz;
- if((Math.abs(f)+Math.abs(side))>.01&&performance.now()-lastStep>(crouched?620:390)){lastStep=performance.now();stepSound();}
- camera.position.set(pos.x,crouched?1.05:1.7,pos.z);
- camera.rotation.order="YXZ";camera.rotation.set(pitch,yaw,0);
- socket.emit("playerState",{x:pos.x,z:pos.z,yaw,pitch,crouched});
+
+function showHit(text) {
+    const marker = $("hitMarker");
+    const label = $("hitText");
+
+    marker.style.opacity = "1";
+    label.textContent = text || "HIT";
+    label.style.opacity = "1";
+
+    lastHitAt = performance.now();
+    lastHitTextAt = lastHitAt;
+
+    window.clearTimeout(showHit.timer);
+    showHit.timer = window.setTimeout(() => {
+        marker.style.opacity = "0";
+        label.style.opacity = "0";
+    }, 350);
 }
-function fire(){
- if(!state||state.phase!=="playing"||!alive||reloading||ammo<=0)return;
- if(performance.now()-lastShot<105)return;
- lastShot=performance.now();recoil=Math.min(.2,recoil+.085);
- if(weapon.userData.flash){weapon.userData.flash.visible=true;setTimeout(()=>{if(weapon?.userData.flash)weapon.userData.flash.visible=false;},45);}
- muzzle.intensity=2.5;setTimeout(()=>{if(muzzle)muzzle.intensity=0;},50);
- gunSound();
- // The server uses the same yaw/pitch convention as the Three.js camera.
- socket.emit("shoot",{yaw,pitch});
+
+function updateHUD() {
+    $("healthValue").textContent = Math.max(0, Math.round(health));
+    $("healthFill").style.width = Math.max(0, Math.min(100, health)) + "%";
+    $("healthFill").style.background =
+        health > 55 ? "#77c99b" : health > 25 ? "#e6bd6d" : "#e45c61";
+
+    $("ammoValue").textContent = `${ammo} / ${maxAmmo}`;
+
+    if (reloading) {
+        $("reloadHint").textContent = "RELOADING...";
+        $("reloadHint").style.color = "#e8c982";
+    } else if (ammo === 0) {
+        $("reloadHint").textContent = "Press R to reload";
+        $("reloadHint").style.color = "#ff8989";
+    } else {
+        $("reloadHint").textContent = "LMB: Fire · R: Reload";
+        $("reloadHint").style.color = "#aeb8c5";
+    }
+
+    if (myPlayer) {
+        const team = myPlayer.team || "red";
+        $("teamValue").textContent = team.toUpperCase();
+        $("teamValue").style.color = team === "red" ? "#e45c61" : "#5a9ce8";
+        $("aliveValue").textContent = alive ? "ALIVE" : "ELIMINATED";
+        $("aliveValue").style.color = alive ? "#77c99b" : "#e45c61";
+    }
+
+    if (state) {
+        const round = Number(state.round || state.roundNumber || 1);
+        $("roundValue").textContent = `ROUND ${round}`;
+
+        const score = state.score || state.roundWins || {};
+        const red = Number(score.red ?? state.redScore ?? 0);
+        const blue = Number(score.blue ?? state.blueScore ?? 0);
+        $("scoreValue").textContent = `RED ${red} - ${blue} BLUE`;
+    }
 }
-function reload(){
- if(!state||state.phase!=="playing"||!alive||reloading||ammo>=20)return;
- reloading=true;reloadAt=performance.now();$("reloadHint").textContent="RELOADING…";
- reloadSound();socket.emit("reload");
+
+function showMenu() {
+    mainMenu.classList.remove("hidden");
+    lobbyScreen.classList.add("hidden");
+    hud.classList.add("hidden");
+    endScreen.classList.add("hidden");
+    $("soundButton").classList.add("hidden");
+    releaseMouse();
 }
-function animate(){
- requestAnimationFrame(animate);if(!worldReady)return;
- const dt=Math.min(clock.getDelta(),.04);
- if($("hud").style.display==="block"){
-  updatePlayer(dt);
-  recoil=Math.max(0,recoil-dt*.72);
-  const progress=reloading?Math.min(1,(performance.now()-reloadAt)/1600):0;
-  const curve=reloading?Math.sin(progress*Math.PI):0;
-  weapon.position.set(.37,-.34+recoil*.2-curve*.14,-.66+recoil*.52+curve*.12);
-  weapon.rotation.set(-.03-recoil*.6+curve*.48,-.035,curve*.42+recoil*.1);
-  if(muzzle.intensity>0)muzzle.intensity=Math.max(0,muzzle.intensity-dt*30);
- }
- for(let i=tracers.length-1;i>=0;i--){const t=tracers[i];t.life-=dt;t.obj.material.opacity=Math.max(0,t.life/t.max*.9);if(t.life<=0){scene.remove(t.obj);t.obj.geometry.dispose();t.obj.material.dispose();tracers.splice(i,1);}}
- renderer.render(scene,camera);
+
+function showLobby() {
+    mainMenu.classList.add("hidden");
+    lobbyScreen.classList.remove("hidden");
+    hud.classList.add("hidden");
+    endScreen.classList.add("hidden");
+    $("soundButton").classList.add("hidden");
+    releaseMouse();
 }
-function aimMouse(e){
- if(!mouseLocked)return;
- yaw-=e.movementX*.0021;pitch=Math.max(-1.25,Math.min(1.25,pitch-e.movementY*.0021));
- camera.rotation.order="YXZ";camera.rotation.set(pitch,yaw,0);
+
+function showGame() {
+    mainMenu.classList.add("hidden");
+    lobbyScreen.classList.add("hidden");
+    hud.classList.remove("hidden");
+    $("soundButton").classList.remove("hidden");
 }
-$("create").onclick=()=>{initAudio();socket.emit("createRoom",$("name").value||"Player");};
-$("join").onclick=()=>{initAudio();socket.emit("joinRoom",{roomCode:$("joinCode").value.trim().toUpperCase(),name:$("name").value||"Player"});};
-$("joinCode").addEventListener("input",e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,5));
-$("copy").onclick=async()=>{try{await navigator.clipboard.writeText(roomCode);$("lobbyStatus").textContent="Room code copied!";}catch{$("lobbyStatus").textContent="Room code: "+roomCode;}};
-$("start").onclick=()=>socket.emit("startMatch");
-$("leave").onclick=()=>{socket.emit("leaveRoom");roomCode=null;myId=null;state=null;panel("main");};
-$("return").onclick=()=>{$("end").style.display="none";panel("lobby");};
-$("sound").onclick=()=>{soundOn=!soundOn;$("sound").textContent="SOUND: "+(soundOn?"ON":"OFF");if(soundOn)initAudio();};
-socket.on("joinedRoom",joined);
-socket.on("matchState",applyState);
-socket.on("roomError",$status);
-socket.on("disconnect",()=>{$status("Connection lost. Reconnecting…");panel("main");});
-socket.on("playerMoved",p=>{const o=remotes.get(p.id);if(o){o.group.position.set(p.x,0,p.z);o.group.rotation.y=p.yaw;}});
-socket.on("playerShot",p=>{
- // Draw the actual server-calculated line, not an arbitrary 28-unit tracer.
- // Older server builds will not send shotTrace; shotTrace below is authoritative.
- if(p.id!==myId)noise(.06,.025,1600);
+
+function showEnd(title, description) {
+    $("endTitle").textContent = title;
+    $("endDescription").textContent = description;
+    endScreen.classList.remove("hidden");
+    releaseMouse();
+}
+
+function releaseMouse() {
+    firing = false;
+
+    if (document.pointerLockElement === renderer.domElement) {
+        document.exitPointerLock();
+    }
+
+    mouseLocked = false;
+}
+
+/* -------------------------------------------------------
+   LOBBY RENDERING
+------------------------------------------------------- */
+
+function renderLobby(s) {
+    const players = Array.isArray(s.players) ? s.players : [];
+    const red = players.filter(p => p.team === "red");
+    const blue = players.filter(p => p.team === "blue");
+
+    $("roomCodeDisplay").textContent = s.code || s.roomCode || roomCode || "-----";
+    $("redCount").textContent = `${red.length} / 5`;
+    $("blueCount").textContent = `${blue.length} / 5`;
+
+    const renderTeam = (list, container) => {
+        container.innerHTML = "";
+
+        if (list.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "small-note";
+            empty.textContent = "No players yet";
+            container.appendChild(empty);
+            return;
+        }
+
+        for (const p of list) {
+            const row = document.createElement("div");
+            row.className = "player-row";
+
+            const name = document.createElement("span");
+            name.textContent = p.name || "Player";
+
+            if (p.id === s.hostId) {
+                const host = document.createElement("span");
+                host.className = "host-label";
+                host.textContent = "HOST";
+                name.appendChild(host);
+            }
+
+            row.appendChild(name);
+
+            if (isHost && p.id !== myId) {
+                const controls = document.createElement("button");
+                controls.textContent = list === red ? "→ Blue" : "→ Red";
+                controls.addEventListener("click", () => {
+                    socket.emit("changeTeam", {
+                        playerId: p.id,
+                        team: list === red ? "blue" : "red"
+                    });
+                });
+                row.appendChild(controls);
+            }
+
+            container.appendChild(row);
+        }
+    };
+
+    renderTeam(red, $("redPlayers"));
+    renderTeam(blue, $("bluePlayers"));
+
+    $("startButton").classList.toggle("hidden", !isHost);
+    $("startButton").disabled = players.length < 2;
+
+    $("joinRedButton").disabled = red.length >= 5;
+    $("joinBlueButton").disabled = blue.length >= 5;
+
+    $("lobbyStatus").textContent = isHost
+        ? "You are the host. At least 2 players are needed to start."
+        : "Waiting for the host to start the match.";
+}
+
+/* -------------------------------------------------------
+   PLAYER STATE AND ROUND RESPAWNING
+------------------------------------------------------- */
+
+function findOwnPlayer(s) {
+    if (!s || !Array.isArray(s.players)) return null;
+    return s.players.find(p => p.id === myId) || null;
+}
+
+function resetLocalRoundPlayer(p) {
+    if (!p) return;
+
+    pos.set(Number(p.x) || 0, 0, Number(p.z) || 0);
+    yaw = Number(p.yaw) || 0;
+    pitch = Number(p.pitch) || 0;
+
+    health = Number(p.health ?? 100);
+    ammo = Number(p.ammo ?? maxAmmo);
+    maxAmmo = Number(p.maxAmmo ?? 20);
+    alive = p.alive !== false;
+    crouched = !!p.crouched;
+
+    firing = false;
+    reloading = false;
+    recoil = 0;
+    fireCooldown = 0;
+    reloadStarted = 0;
+
+    for (const k of Object.keys(keys)) keys[k] = false;
+
+    if (weapon) {
+        weapon.rotation.set(0.01, -0.015, 0.005);
+        weapon.position.set(0.34, -0.30, -0.59);
+    }
+
+    if (muzzleFlash) muzzleFlash.visible = false;
+
+    camera.position.set(pos.x, crouched ? 1.05 : 1.7, pos.z);
+    camera.rotation.order = "YXZ";
+    camera.rotation.set(pitch, yaw, 0);
+
+    $("endScreen").classList.add("hidden");
+    updateHUD();
+}
+
+function applyState(s) {
+    if (!s) return;
+
+    const previousPhase = lastAppliedPhase;
+    const previousRound = lastAppliedRound;
+
+    state = s;
+
+    if (s.code || s.roomCode) {
+        roomCode = s.code || s.roomCode;
+    }
+
+    if (s.hostId) {
+        isHost = s.hostId === myId;
+    } else if (typeof s.isHost === "boolean") {
+        isHost = s.isHost;
+    }
+
+    myPlayer = findOwnPlayer(s) || myPlayer;
+
+    const phase = s.phase || "lobby";
+    const round = Number(s.round || s.roundNumber || 1);
+
+    if (phase === "lobby") {
+        renderLobby(s);
+        showLobby();
+    } else if (phase === "playing" || phase === "between") {
+        showGame();
+
+        const own = findOwnPlayer(s);
+
+        // Only teleport at the beginning of a new round, not on every state update.
+        const newRound =
+            phase === "playing" &&
+            (previousPhase !== "playing" || round !== previousRound);
+
+        if (newRound && own) {
+            resetLocalRoundPlayer(own);
+            showMessage(`ROUND ${round} - FIGHT!`, 2200);
+        } else if (own) {
+            myPlayer = own;
+            health = Number(own.health ?? health);
+            ammo = Number(own.ammo ?? ammo);
+            alive = own.alive !== false;
+            updateHUD();
+        }
+
+        if (phase === "between") {
+            firing = false;
+            showMessage("ROUND OVER", 2800);
+        }
+
+        if (s.matchWinner || s.winner) {
+            const winner = s.matchWinner || s.winner;
+            showEnd(
+                `${String(winner).toUpperCase()} TEAM WINS`,
+                "The match is complete."
+            );
+        } else if (phase === "playing" && previousPhase !== "playing") {
+            $("endScreen").classList.add("hidden");
+        }
+    }
+
+    const players = Array.isArray(s.players) ? s.players : [];
+    for (const p of players) {
+        if (p.id !== myId) updateRemote(p, 1 / 60);
+    }
+    removeMissingPlayers(players);
+
+    lastAppliedRound = round;
+    lastAppliedPhase = phase;
+
+    updateHUD();
+}
+
+/* -------------------------------------------------------
+   MOVEMENT AND COLLISION
+------------------------------------------------------- */
+
+function blocked(x, z, radius = 0.38) {
+    for (const b of blocks) {
+        const minX = b.x - b.w / 2 - radius;
+        const maxX = b.x + b.w / 2 + radius;
+        const minZ = b.z - b.d / 2 - radius;
+        const maxZ = b.z + b.d / 2 + radius;
+
+        if (x > minX && x < maxX && z > minZ && z < maxZ) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function updatePlayer(dt) {
+    if (!state || state.phase !== "playing" || !alive) return;
+
+    const speed = crouched ? 2.05 : 4.2;
+
+    let forward = 0;
+    let side = 0;
+
+    if (keys.KeyW || keys.ArrowUp) forward += 1;
+    if (keys.KeyS || keys.ArrowDown) forward -= 1;
+    if (keys.KeyD || keys.ArrowRight) side += 1;
+    if (keys.KeyA || keys.ArrowLeft) side -= 1;
+
+    const length = Math.hypot(forward, side);
+
+    if (length > 0) {
+        forward /= length;
+        side /= length;
+
+        const dx = (-Math.sin(yaw) * forward + Math.cos(yaw) * side) * speed * dt;
+        const dz = (-Math.cos(yaw) * forward - Math.sin(yaw) * side) * speed * dt;
+
+        if (!blocked(pos.x + dx, pos.z)) pos.x += dx;
+        if (!blocked(pos.x, pos.z + dz)) pos.z += dz;
+    }
+
+    camera.position.set(pos.x, crouched ? 1.05 : 1.7, pos.z);
+    camera.rotation.order = "YXZ";
+    camera.rotation.set(pitch, yaw, 0);
+
+    const now = performance.now();
+
+    if (now - lastStateSend >= 35) {
+        lastStateSend = now;
+
+        socket.emit("playerState", {
+            x: pos.x,
+            z: pos.z,
+            yaw,
+            pitch,
+            crouched
+        });
+    }
+}
+
+/* -------------------------------------------------------
+   SHOOTING AND RELOADING
+------------------------------------------------------- */
+
+function fire() {
+    if (!state || state.phase !== "playing") return;
+    if (!alive || reloading || ammo <= 0) return;
+
+    const now = performance.now();
+    if (now < fireCooldown) return;
+
+    fireCooldown = now + 105;
+    ammo--;
+
+    recoil = Math.min(0.11, recoil + 0.065);
+
+    if (weapon) {
+        weapon.rotation.x = -0.055;
+        weapon.position.y = -0.30 - recoil * 0.18;
+    }
+
+    if (muzzleFlash) {
+        muzzleFlash.visible = true;
+        window.clearTimeout(fire.flashTimer);
+        fire.flashTimer = window.setTimeout(() => {
+            if (muzzleFlash) muzzleFlash.visible = false;
+        }, 45);
+    }
+
+    playSound("shot");
+    updateHUD();
+
+    socket.emit("shoot", {
+        yaw,
+        pitch
+    });
+
+    if (ammo <= 0) {
+        showMessage("MAGAZINE EMPTY - PRESS R TO RELOAD", 1200);
+    }
+}
+
+function reload() {
+    if (!state || state.phase !== "playing") return;
+    if (!alive || reloading || ammo >= maxAmmo) return;
+
+    reloading = true;
+    firing = false;
+    reloadStarted = performance.now();
+
+    playSound("reload");
+    updateHUD();
+}
+
+function updateReload() {
+    if (!reloading) return;
+
+    if (performance.now() - reloadStarted >= reloadDuration) {
+        reloading = false;
+        ammo = maxAmmo;
+        updateHUD();
+        socket.emit("reload");
+        showMessage("RELOADED", 700);
+    }
+}
+
+/* -------------------------------------------------------
+   ANIMATION LOOP
+------------------------------------------------------- */
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    if (!renderer || !scene || !camera) return;
+
+    const dt = Math.min(clock.getDelta(), 0.05);
+
+    updatePlayer(dt);
+
+    // Holding the mouse continuously fires the rifle.
+    if (firing && mouseLocked) {
+        fire();
+    }
+
+    updateReload();
+
+    // Ease the rifle back to its resting position after recoil.
+    recoil = Math.max(0, recoil - dt * 0.42);
+
+    if (weapon && !reloading) {
+        weapon.rotation.x += (0.01 - weapon.rotation.x) * Math.min(1, dt * 14);
+        weapon.position.y += (-0.30 - recoil * 0.18 - weapon.position.y) *
+            Math.min(1, dt * 18);
+    }
+
+    updateTracers();
+
+    renderer.render(scene, camera);
+}
+
+/* -------------------------------------------------------
+   POINTER LOCK AND MOUSE AIM
+------------------------------------------------------- */
+
+rendererSafePointerSetup();
+
+function rendererSafePointerSetup() {
+    document.addEventListener("pointerlockchange", () => {
+        mouseLocked = document.pointerLockElement === $("gameCanvas");
+
+        if (!mouseLocked) {
+            firing = false;
+        }
+    });
+
+    document.addEventListener("mousemove", e => {
+        if (!mouseLocked) return;
+        if (!state || state.phase !== "playing" || !alive) return;
+
+        yaw -= e.movementX * 0.0021;
+        pitch -= e.movementY * 0.0021;
+        pitch = Math.max(-1.25, Math.min(1.25, pitch));
+
+        camera.rotation.order = "YXZ";
+        camera.rotation.set(pitch, yaw, 0);
+    });
+
+    $("gameCanvas").addEventListener("mousedown", e => {
+        if (!state || state.phase !== "playing" || !alive) return;
+        if (e.button !== 0) return;
+
+        if (!mouseLocked) {
+            $("gameCanvas").requestPointerLock();
+            return;
+        }
+
+        firing = true;
+        fire();
+    });
+
+    window.addEventListener("mouseup", e => {
+        if (e.button === 0) firing = false;
+    });
+
+    $("gameCanvas").addEventListener("contextmenu", e => e.preventDefault());
+}
+
+/* -------------------------------------------------------
+   KEYBOARD INPUT
+------------------------------------------------------- */
+
+window.addEventListener("keydown", e => {
+    keys[e.code] = true;
+
+    if ([
+        "KeyW", "KeyA", "KeyS", "KeyD",
+        "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight",
+        "Space"
+    ].includes(e.code)) {
+        e.preventDefault();
+    }
+
+    if (e.repeat) return;
+
+    if (e.code === "ShiftLeft" || e.code === "ShiftRight") {
+        crouched = true;
+        socket.emit("playerState", {
+            x: pos.x,
+            z: pos.z,
+            yaw,
+            pitch,
+            crouched
+        });
+    }
+
+    if (e.code === "KeyR") {
+        reload();
+    }
+
+    if (e.code === "Escape") {
+        firing = false;
+    }
 });
-socket.on("shotTrace",p=>{
- line(p.from,p.to,p.id===myId?0xffdda2:0xe0ebee);
+
+window.addEventListener("keyup", e => {
+    keys[e.code] = false;
+
+    if (e.code === "ShiftLeft" || e.code === "ShiftRight") {
+        crouched = false;
+        socket.emit("playerState", {
+            x: pos.x,
+            z: pos.z,
+            yaw,
+            pitch,
+            crouched
+        });
+    }
 });
-socket.on("shotResult",r=>{
- if(typeof r.ammo==="number"){ammo=r.ammo;$("ammo").textContent=ammo+" / 20";}
- reloading=!!r.reloading;
- if(r.hit){hitSound();$("notice").textContent=r.zone.toUpperCase()+" HIT · "+r.damage;setTimeout(()=>$("notice").textContent="",600);}
- if(r.eliminated)msg("ELIMINATION",1000);
- if(!ammo&&!reloading)$("reloadHint").textContent="PRESS R TO RELOAD";
+
+window.addEventListener("blur", () => {
+    firing = false;
+    for (const k of Object.keys(keys)) keys[k] = false;
 });
-socket.on("playerDamaged",p=>{
- if(p.id===myId){
-  health=p.health;alive=p.alive;$("healthNum").textContent=health+" HP";$("healthFill").style.width=health+"%";
-  if(!alive){msg("ELIMINATED",2400);document.exitPointerLock?.();}else tone(160,.1,"sawtooth",.04,-70);
- }
+
+/* -------------------------------------------------------
+   MENU BUTTONS
+------------------------------------------------------- */
+
+function getPlayerName() {
+    const name = $("playerName").value.trim();
+    return name || "Player";
+}
+
+$("createButton").addEventListener("click", () => {
+    $("menuError").textContent = "";
+    socket.emit("createRoom", {
+        name: getPlayerName()
+    });
 });
-socket.on("reloadState",p=>{if(p.id===myId){ammo=p.ammo;reloading=p.reloading;$("ammo").textContent=ammo+" / 20";}});
-socket.on("combatMessage",m=>{if(m?.text)msg(m.text,2400);});
-document.addEventListener("pointerlockchange",()=>{mouseLocked=document.pointerLockElement===renderer?.domElement;});
-document.addEventListener("mousemove",aimMouse);
-document.addEventListener("mousedown",e=>{
- if(e.button!==0||$("hud").style.display!=="block")return;
- if(!mouseLocked){renderer?.domElement.requestPointerLock?.();return;}
- firing=true;fire();
+
+$("joinButton").addEventListener("click", () => {
+    $("menuError").textContent = "";
+
+    const code = $("roomInput").value.trim().toUpperCase();
+
+    if (code.length !== 5) {
+        $("menuError").textContent = "Enter the complete 5-character room code.";
+        return;
+    }
+
+    socket.emit("joinRoom", {
+        code,
+        name: getPlayerName()
+    });
 });
-document.addEventListener("mouseup",e=>{if(e.button===0)firing=false;});
-document.addEventListener("keydown",e=>{
- if(["KeyW","KeyA","KeyS","KeyD","ShiftLeft","ShiftRight","KeyR"].includes(e.code))e.preventDefault();
- if(e.code==="KeyW")keys.w=true;if(e.code==="KeyA")keys.a=true;if(e.code==="KeyS")keys.s=true;if(e.code==="KeyD")keys.d=true;
- if((e.code==="ShiftLeft"||e.code==="ShiftRight")&&!crouched){crouched=true;$("stance").textContent="CROUCHED";}
- if(e.code==="KeyR"&&!e.repeat)reload();
+
+$("roomInput").addEventListener("input", () => {
+    $("roomInput").value = $("roomInput").value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 5);
 });
-document.addEventListener("keyup",e=>{
- if(e.code==="KeyW")keys.w=false;if(e.code==="KeyA")keys.a=false;if(e.code==="KeyS")keys.s=false;if(e.code==="KeyD")keys.d=false;
- if(e.code==="ShiftLeft"||e.code==="ShiftRight"){crouched=false;$("stance").textContent="STANDING";}
+
+$("joinRedButton").addEventListener("click", () => {
+    socket.emit("changeTeam", {
+        playerId: myId,
+        team: "red"
+    });
 });
-window.addEventListener("blur",()=>{keys={w:false,a:false,s:false,d:false};firing=false;});
-window.addEventListener("resize",()=>{if(camera&&renderer){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}});
-panel("main");
+
+$("joinBlueButton").addEventListener("click", () => {
+    socket.emit("changeTeam", {
+        playerId: myId,
+        team: "blue"
+    });
+});
+
+$("startButton").addEventListener("click", () => {
+    socket.emit("startMatch");
+});
+
+$("leaveButton").addEventListener("click", () => {
+    releaseMouse();
+    socket.emit("leaveRoom");
+    state = null;
+    myPlayer = null;
+    roomCode = "";
+    isHost = false;
+    lastAppliedRound = -1;
+    lastAppliedPhase = "";
+    showMenu();
+});
+
+$("returnLobbyButton").addEventListener("click", () => {
+    releaseMouse();
+    socket.emit("returnToLobby");
+});
+
+$("soundButton").addEventListener("click", () => {
+    soundEnabled = !soundEnabled;
+    $("soundButton").textContent = soundEnabled ? "Sound: ON" : "Sound: OFF";
+});
+
+/* -------------------------------------------------------
+   SOCKET.IO EVENTS
+------------------------------------------------------- */
+
+socket.on("connect", () => {
+    connectionStatus.textContent = "Connected to server";
+    connectionStatus.className = "good";
+    myId = socket.id;
+});
+
+socket.on("disconnect", () => {
+    connectionStatus.textContent = "Disconnected from server";
+    connectionStatus.className = "bad";
+    firing = false;
+    releaseMouse();
+});
+
+socket.on("connect_error", () => {
+    connectionStatus.textContent = "Unable to connect to server";
+    connectionStatus.className = "bad";
+});
+
+socket.on("errorMessage", message => {
+    $("menuError").textContent = typeof message === "string"
+        ? message
+        : message?.message || "Something went wrong.";
+    $("lobbyStatus").textContent = $("menuError").textContent;
+});
+
+socket.on("roomError", message => {
+    $("menuError").textContent = typeof message === "string"
+        ? message
+        : message?.message || "Could not join that room.";
+});
+
+socket.on("joined", data => {
+    if (!data) return;
+
+    myId = data.id || socket.id;
+    roomCode = data.code || data.roomCode || roomCode;
+
+    if (data.state) {
+        state = data.state;
+        isHost = state.hostId === myId;
+        myPlayer = findOwnPlayer(state);
+        if (myPlayer) resetLocalRoundPlayer(myPlayer);
+        applyState(state);
+    } else {
+        if (data.player) {
+            myPlayer = data.player;
+            resetLocalRoundPlayer(data.player);
+        }
+
+        if (data.code || data.roomCode) {
+            roomCode = data.code || data.roomCode;
+        }
+
+        showLobby();
+    }
+
+    $("menuError").textContent = "";
+});
+
+socket.on("state", applyState);
+socket.on("gameState", applyState);
+socket.on("roomState", applyState);
+
+socket.on("roundStarted", data => {
+    if (data && data.state) {
+        applyState(data.state);
+        return;
+    }
+
+    if (state) {
+        const own = findOwnPlayer(state);
+        if (own) resetLocalRoundPlayer(own);
+    }
+
+    showMessage(data?.message || "ROUND STARTED", 1800);
+});
+
+socket.on("shotTrace", data => {
+    if (!data) return;
+
+    const from = data.from || data.start;
+    const to = data.to || data.end;
+
+    if (from && to) {
+        line(from, to);
+    }
+});
+
+socket.on("shotResult", result => {
+    if (!result) return;
+
+    if (result.hit || result.hitPlayer || result.zone || result.damage) {
+        const zone = result.zone
+            ? String(result.zone).toUpperCase()
+            : "HIT";
+
+        const damage = Number(result.damage || 0);
+        showHit(damage > 0 ? `${zone} - ${damage} DMG` : zone);
+        playSound("hit");
+    }
+});
+
+socket.on("playerDamaged", data => {
+    if (!data) return;
+
+    if (data.playerId && data.playerId !== myId) return;
+
+    if (typeof data.health === "number") {
+        health = data.health;
+    } else if (typeof data.remainingHealth === "number") {
+        health = data.remainingHealth;
+    } else if (typeof data.damage === "number") {
+        health = Math.max(0, health - data.damage);
+    }
+
+    if (data.alive === false || health <= 0) {
+        alive = false;
+        firing = false;
+        showMessage("ELIMINATED", 1800);
+    }
+
+    playSound("damage");
+    updateHUD();
+});
+
+socket.on("playerDied", data => {
+    if (!data) return;
+
+    const id = data.playerId || data.id;
+
+    if (id === myId) {
+        alive = false;
+        health = 0;
+        firing = false;
+        updateHUD();
+        showMessage("ELIMINATED", 2000);
+    }
+});
+
+socket.on("roundEnded", data => {
+    firing = false;
+    const winner = data?.winner || data?.winningTeam;
+    showMessage(winner ? `${String(winner).toUpperCase()} TEAM WINS THE ROUND` : "ROUND OVER", 2500);
+});
+
+socket.on("matchEnded", data => {
+    const winner = data?.winner || data?.winningTeam || "MATCH";
+    showEnd(`${String(winner).toUpperCase()} WINS`, "The match is complete.");
+});
+
+socket.on("matchWinner", data => {
+    const winner = typeof data === "string"
+        ? data
+        : data?.winner || data?.team || "Match";
+
+    showEnd(`${String(winner).toUpperCase()} WINS`, "The match is complete.");
+});
+
+socket.on("returnedToLobby", data => {
+    if (data?.state) {
+        applyState(data.state);
+    } else if (state) {
+        state.phase = "lobby";
+        applyState(state);
+    } else {
+        showLobby();
+    }
+});
+
+/* -------------------------------------------------------
+   START
+------------------------------------------------------- */
+
+try {
+    initThree();
+} catch (err) {
+    console.error("Three.js initialization failed:", err);
+    connectionStatus.textContent = "Game graphics failed to initialize. Check the browser console.";
+    connectionStatus.className = "bad";
+}
+
 })();
 </script>
+
 </body>
 </html>
