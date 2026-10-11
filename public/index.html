@@ -141,6 +141,8 @@ let yaw = 0, pitch = 0, locked = false, lastSend = 0;
 let matchState = null, myPlayer = null, shooting = false, nextShotAt = 0;
 let ammo = 20, health = 100, alive = true, reloading = false;
 let toastUntil = 0, recoil = 0, muzzleUntil = 0, lastMoveTime = 0;
+let previousPhase = "";
+let previousRound = 0;
 const keys = {};
 const remotes = new Map(), tracers = [], hitMarkers = [];
 const clock = new THREE.Clock();
