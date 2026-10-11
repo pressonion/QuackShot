@@ -1,0 +1,468 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neon Arena FPS</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:#090d18;color:#eafaff;font-family:Arial,sans-serif}
+canvas{display:block}
+button,input{font:inherit}
+button{cursor:pointer;background:#102b40;border:1px solid #36dff5;color:#eafaff;padding:12px 20px;border-radius:8px}
+button:hover{background:#17465c}
+input{background:#0a1220;color:white;border:1px solid #32647a;padding:12px;border-radius:8px;width:100%}
+#lobby,#playOverlay{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:rgba(5,9,20,.93)}
+.panel{width:min(390px,92vw);padding:28px;background:#101b2c;border:1px solid #244d65;border-radius:16px;box-shadow:0 0 45px #00c8ff18}
+h1{font-size:34px;color:#42e8ff;margin:0 0 8px}
+.sub{color:#a9bfd1;margin-bottom:22px}
+.panel button{width:100%;margin-top:10px}
+#roomInput{margin-top:10px;text-transform:uppercase}
+#status{color:#ffb8b8;min-height:22px;margin-top:12px;font-size:13px}
+#playOverlay{display:none;background:rgba(5,9,20,.65);cursor:pointer;text-align:center}
+#hud{display:none;position:fixed;inset:0;pointer-events:none}
+#topbar{position:absolute;top:15px;left:15px;right:15px;display:flex;justify-content:space-between;gap:12px}
+.tag{padding:10px 13px;background:#08121dcc;border:1px solid #245268;border-radius:8px;font-size:13px}
+#crosshair{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%)}
+#crosshair:before,#crosshair:after{content:"";position:absolute;background:#52f4ff;box-shadow:0 0 6px #52f4ff}
+#crosshair:before{width:2px;height:22px;left:10px;top:0}
+#crosshair:after{height:2px;width:22px;top:10px;left:0}
+#bottom{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);white-space:nowrap;text-align:center;background:#08121dcc;border:1px solid #245268;border-radius:8px;padding:10px 15px;font-size:13px}
+#message{color:#42e8ff}
+</style>
+</head>
+<body>
+
+<div id="lobby">
+  <div class="panel">
+    <h1>NEON ARENA</h1>
+    <div class="sub">Simple multiplayer FPS · No damage</div>
+    <label for="nameInput">Player name</label>
+    <input id="nameInput" maxlength="16" value="Player">
+    <button id="createBtn">CREATE ROOM</button>
+    <div style="margin-top:20px">Or join a friend's room</div>
+    <input id="roomInput" maxlength="5" placeholder="ENTER 5-CHARACTER CODE">
+    <button id="joinBtn">JOIN ROOM</button>
+    <div id="status"></div>
+    <div style="font-size:12px;color:#8199ae;margin-top:8px">WASD move · Mouse look · Click shoot · ESC unlocks mouse</div>
+  </div>
+</div>
+
+<div id="playOverlay">
+  <div class="panel">
+    <h1>READY?</h1>
+    <p>Click to enter the arena</p>
+    <p style="color:#a9bfd1;font-size:13px">WASD to move · Mouse to aim · Click to shoot</p>
+  </div>
+</div>
+
+<div id="hud">
+  <div id="topbar">
+    <div class="tag">NEON ARENA <span id="playerCount">· 1 player</span></div>
+    <div class="tag">ROOM: <strong id="roomLabel">-----</strong></div>
+  </div>
+  <div id="crosshair"></div>
+  <div id="bottom">WASD MOVE · MOUSE LOOK · CLICK SHOOT · <span id="message">NO DAMAGE</span></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+
+const socket = io();
+const lobby = document.querySelector("#lobby");
+const playOverlay = document.querySelector("#playOverlay");
+const hud = document.querySelector("#hud");
+const statusEl = document.querySelector("#status");
+const roomInput = document.querySelector("#roomInput");
+const nameInput = document.querySelector("#nameInput");
+
+let joined = false;
+let roomCode = "";
+let myId = "";
+let yaw = 0;
+let pitch = 0;
+let locked = false;
+let lastSend = 0;
+const keys = {};
+const remotes = new Map();
+const tracers = [];
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x090d18);
+scene.fog = new THREE.Fog(0x090d18, 25, 90);
+
+const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 150);
+camera.position.set(0, 1.7, 0);
+camera.rotation.order = "YXZ";
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0x8abaff, 0x20202e, 2));
+
+const light = new THREE.DirectionalLight(0xffffff, 2);
+light.position.set(10, 20, 8);
+light.castShadow = true;
+scene.add(light);
+
+function box(w, h, d, x, y, z, color, emissive = 0x000000) {
+  const mesh = new THREE.Mesh(
+    new THREE.BoxGeometry(w, h, d),
+    new THREE.MeshStandardMaterial({
+      color,
+      roughness: 0.75,
+      emissive,
+      emissiveIntensity: 0.5
+    })
+  );
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+  return mesh;
+}
+
+// Arena floor and glowing grid.
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(100, 100),
+  new THREE.MeshStandardMaterial({ color: 0x111a2a, roughness: 0.9 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+const grid = new THREE.GridHelper(100, 50, 0x087e99, 0x183348);
+grid.position.y = 0.015;
+scene.add(grid);
+
+// Arena walls.
+box(100, 8, 1, 0, 4, -50, 0x14253b, 0x052a45);
+box(100, 8, 1, 0, 4, 50, 0x14253b, 0x052a45);
+box(1, 8, 100, -50, 4, 0, 0x14253b, 0x052a45);
+box(1, 8, 100, 50, 4, 0, 0x14253b, 0x052a45);
+
+// Decorative cover blocks.
+for (const p of [
+  [-12, 0, -10], [12, 0, -12], [-16, 0, 12],
+  [16, 0, 12], [0, 0, -20], [0, 0, 20],
+  [-25, 0, 0], [25, 0, 0]
+]) {
+  box(4, 2.5, 4, p[0], 1.25, p[2], 0x26374e);
+}
+
+// Local gun model attached to the first-person camera.
+const gun = new THREE.Group();
+const gunMat = new THREE.MeshStandardMaterial({
+  color: 0x263b50, metalness: 0.8, roughness: 0.3
+});
+const cyanMat = new THREE.MeshStandardMaterial({
+  color: 0x42e8ff, emissive: 0x00bde8, emissiveIntensity: 1.5
+});
+
+const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.2, 0.55), gunMat);
+receiver.position.set(0.36, -0.29, -0.68);
+gun.add(receiver);
+
+const barrel = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.48), gunMat);
+barrel.position.set(0.36, -0.24, -1.12);
+gun.add(barrel);
+
+const sight = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.12), cyanMat);
+sight.position.set(0.36, -0.17, -0.75);
+gun.add(sight);
+
+const grip = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.24, 0.16), gunMat);
+grip.position.set(0.36, -0.47, -0.55);
+grip.rotation.x = -0.2;
+gun.add(grip);
+
+camera.add(gun);
+scene.add(camera);
+
+function createRemote(player) {
+  const group = new THREE.Group();
+  const material = new THREE.MeshStandardMaterial({
+    color: player.color || 0x42e8ff,
+    roughness: 0.55,
+    emissive: player.color || 0x42e8ff,
+    emissiveIntensity: 0.2
+  });
+
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.65, 1.1, 0.38), material);
+  body.position.y = 0.9;
+  group.add(body);
+
+  const head = new THREE.Mesh(
+    new THREE.SphereGeometry(0.25, 16, 12),
+    new THREE.MeshStandardMaterial({ color: 0xd7e7f4 })
+  );
+  head.position.y = 1.65;
+  group.add(head);
+
+  const remoteGun = new THREE.Mesh(
+    new THREE.BoxGeometry(0.13, 0.13, 0.7),
+    new THREE.MeshStandardMaterial({
+      color: 0x42e8ff,
+      emissive: 0x087d99,
+      emissiveIntensity: 0.7
+    })
+  );
+  remoteGun.position.set(0.38, 1.12, -0.4);
+  group.add(remoteGun);
+
+  const labelCanvas = document.createElement("canvas");
+  labelCanvas.width = 256;
+  labelCanvas.height = 64;
+  const ctx = labelCanvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 28px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(player.name || "Player", 128, 42);
+
+  const labelTexture = new THREE.CanvasTexture(labelCanvas);
+  const label = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: labelTexture, transparent: true
+  }));
+  label.scale.set(2.2, 0.55, 1);
+  label.position.y = 2.15;
+  group.add(label);
+
+  scene.add(group);
+  return { group, target: new THREE.Vector3(player.x, 0, player.z) };
+}
+
+function updateRemote(player) {
+  if (player.id === myId) return;
+
+  let remote = remotes.get(player.id);
+  if (!remote) {
+    remote = createRemote(player);
+    remotes.set(player.id, remote);
+  }
+
+  remote.target.set(player.x, 0, player.z);
+  remote.group.rotation.y = player.yaw || 0;
+}
+
+function updatePlayerList(players) {
+  const seen = new Set();
+
+  for (const player of players) {
+    if (player.id === myId) continue;
+    seen.add(player.id);
+    updateRemote(player);
+  }
+
+  for (const [id, remote] of remotes) {
+    if (!seen.has(id)) {
+      scene.remove(remote.group);
+      remote.group.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+          else obj.material.dispose();
+        }
+      });
+      remotes.delete(id);
+    }
+  }
+
+  document.querySelector("#playerCount").textContent =
+    `· ${players.length} player${players.length === 1 ? "" : "s"}`;
+}
+
+function makeTracer(start, direction, color = 0x42e8ff) {
+  const end = start.clone().add(direction.clone().multiplyScalar(28));
+  const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+  const line = new THREE.Line(
+    geometry,
+    new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.95 })
+  );
+  scene.add(line);
+  tracers.push({ line, expires: performance.now() + 90 });
+}
+
+function fire() {
+  if (!joined || !locked) return;
+
+  const direction = new THREE.Vector3();
+  camera.getWorldDirection(direction);
+  const start = camera.position.clone().add(direction.clone().multiplyScalar(0.8));
+  makeTracer(start, direction);
+
+  // Only creates a visual effect. There is no hit detection or damage.
+  socket.emit("shoot");
+  gun.position.z = 0.06;
+  setTimeout(() => { gun.position.z = 0; }, 55);
+}
+
+document.querySelector("#createBtn").addEventListener("click", () => {
+  statusEl.textContent = "Creating room...";
+  socket.emit("createRoom", nameInput.value);
+});
+
+document.querySelector("#joinBtn").addEventListener("click", () => {
+  const code = roomInput.value.trim().toUpperCase();
+  if (code.length !== 5) {
+    statusEl.textContent = "Enter a 5-character room code.";
+    return;
+  }
+  statusEl.textContent = "Joining room...";
+  socket.emit("joinRoom", { roomCode: code, name: nameInput.value });
+});
+
+socket.on("connect", () => {
+  statusEl.textContent = "";
+});
+
+socket.on("disconnect", () => {
+  if (joined) {
+    joined = false;
+    locked = false;
+    document.exitPointerLock?.();
+    hud.style.display = "none";
+    lobby.style.display = "flex";
+    statusEl.textContent = "Connection lost. Reconnect and join again.";
+  }
+});
+
+socket.on("roomError", message => {
+  statusEl.textContent = message;
+});
+
+socket.on("joinedRoom", data => {
+  joined = true;
+  myId = data.id;
+  roomCode = data.roomCode;
+  document.querySelector("#roomLabel").textContent = roomCode;
+  lobby.style.display = "none";
+  hud.style.display = "block";
+  playOverlay.style.display = "flex";
+  updatePlayerList(data.players);
+});
+
+socket.on("players", players => {
+  updatePlayerList(players);
+});
+
+socket.on("playerMoved", state => {
+  const remote = remotes.get(state.id);
+  if (!remote) return;
+  remote.target.set(state.x, 0, state.z);
+  remote.group.rotation.y = state.yaw || 0;
+});
+
+socket.on("playerShot", shot => {
+  const direction = new THREE.Vector3(
+    -Math.sin(shot.yaw) * Math.cos(shot.pitch),
+    Math.sin(shot.pitch),
+    -Math.cos(shot.yaw) * Math.cos(shot.pitch)
+  );
+  const start = new THREE.Vector3(shot.x, shot.y, shot.z)
+    .add(direction.clone().multiplyScalar(0.8));
+  makeTracer(start, direction, 0xff62d5);
+});
+
+playOverlay.addEventListener("click", () => {
+  if (!joined) return;
+  renderer.domElement.requestPointerLock();
+});
+
+document.addEventListener("pointerlockchange", () => {
+  locked = document.pointerLockElement === renderer.domElement;
+  playOverlay.style.display = joined && !locked ? "flex" : "none";
+});
+
+document.addEventListener("mousemove", event => {
+  if (!locked) return;
+  yaw -= event.movementX * 0.002;
+  pitch -= event.movementY * 0.002;
+  pitch = Math.max(-1.45, Math.min(1.45, pitch));
+  camera.rotation.set(pitch, yaw, 0, "YXZ");
+});
+
+document.addEventListener("keydown", event => {
+  keys[event.code] = true;
+  if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.code)) {
+    event.preventDefault();
+  }
+});
+
+document.addEventListener("keyup", event => {
+  keys[event.code] = false;
+});
+
+document.addEventListener("mousedown", event => {
+  if (event.button === 0) fire();
+});
+
+document.addEventListener("contextmenu", event => event.preventDefault());
+
+function animate(now) {
+  requestAnimationFrame(animate);
+
+  const dt = Math.min(0.05, (now - (animate.last || now)) / 1000);
+  animate.last = now;
+
+  if (joined && locked) {
+    const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+    const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+    const move = new THREE.Vector3();
+
+    if (keys.KeyW || keys.ArrowUp) move.add(forward);
+    if (keys.KeyS || keys.ArrowDown) move.sub(forward);
+    if (keys.KeyD || keys.ArrowRight) move.add(right);
+    if (keys.KeyA || keys.ArrowLeft) move.sub(right);
+
+    if (move.lengthSq() > 0) {
+      move.normalize().multiplyScalar(7 * dt);
+      camera.position.add(move);
+    }
+
+    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -47, 47);
+    camera.position.z = THREE.MathUtils.clamp(camera.position.z, -47, 47);
+    camera.position.y = 1.7;
+
+    if (now - lastSend > 33) {
+      lastSend = now;
+      socket.emit("playerState", {
+        x: camera.position.x,
+        z: camera.position.z,
+        yaw,
+        pitch
+      });
+    }
+  }
+
+  for (const remote of remotes.values()) {
+    remote.group.position.lerp(remote.target, 0.25);
+  }
+
+  for (let i = tracers.length - 1; i >= 0; i--) {
+    if (now >= tracers[i].expires) {
+      scene.remove(tracers[i].line);
+      tracers[i].line.geometry.dispose();
+      tracers[i].line.material.dispose();
+      tracers.splice(i, 1);
+    }
+  }
+
+  renderer.render(scene, camera);
+}
+
+requestAnimationFrame(animate);
+
+window.addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
